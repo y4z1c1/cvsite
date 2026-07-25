@@ -1,11 +1,10 @@
 'use client';
 import { useContext, useEffect, useRef, useState } from 'react';
+import { useTheme } from 'next-themes';
 import { LanguageContext } from '../context/LanguageContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { suggestedQuestions } from '../translations';
 
 type Line =
-  | { kind: 'boot'; text: string }
   | { kind: 'system'; text: string }
   | { kind: 'user'; text: string }
   | { kind: 'assistant'; text: string };
@@ -19,33 +18,47 @@ const LINKS: Record<string, string> = {
   email: 'mailto:yusufanilyazici@gmail.com',
 };
 
+const Anil = () => (
+  // eslint-disable-next-line @next/next/no-img-element
+  <img
+    src="/pp.png"
+    alt="anıl"
+    width={30}
+    height={30}
+    style={{
+      width: 30,
+      height: 30,
+      borderRadius: '50%',
+      objectFit: 'cover',
+      border: '1px solid var(--border)',
+      flex: '0 0 auto',
+    }}
+  />
+);
+
+// Loose keyword matching for chat-driven theme/language switches — not full
+// NLU, just enough to catch "dark mode", "koyu tema", "türkçeye geç", etc.
+// Requires a color word + a "theme/mode" word together to avoid firing on
+// unrelated sentences that happen to mention "dark" or "light".
+const DARK_RE = /\b(dark|koyu|karanlık)\b/i;
+const LIGHT_RE = /\b(light|açık|aydınlık)\b/i;
+const THEME_WORD_RE = /\b(theme|mode|tema|mod)\b/i;
+const TURKISH_RE = /\b(türkçe|turkish)\b/i;
+const ENGLISH_RE = /\b(english|ingilizce)\b/i;
+
 const Chat = () => {
-  const { language } = useContext(LanguageContext);
+  const { language, setLanguage } = useContext(LanguageContext);
+  const { setTheme } = useTheme();
   const { t } = useTranslation();
 
   const lc = (s: string) => s.toLocaleLowerCase(language === 'tr' ? 'tr-TR' : 'en-US');
 
-  const boot = (): Line[] => [
-    { kind: 'boot', text: 'anil@yazici:~$ ./persona --init' },
-    { kind: 'boot', text: 'loaded: yusuf anıl yazıcı · computer engineer' },
-    { kind: 'boot', text: `${lc(t('currentEducation'))} · graduated june 2026` },
-    { kind: 'boot', text: `stack: ${SKILLS}` },
-    { kind: 'boot', text: t('termHint') },
-  ];
-
-  const [lines, setLines] = useState<Line[]>(boot);
+  const [lines, setLines] = useState<Line[]>([{ kind: 'assistant', text: t('chatIntro') }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // reset boot lines if language changes and no conversation yet
-  const started = lines.some((l) => l.kind === 'user');
-  useEffect(() => {
-    if (!started) setLines(boot());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: 'smooth' });
@@ -56,6 +69,31 @@ const Chat = () => {
   // returns true if handled locally as a command
   const runCommand = (raw: string): boolean => {
     const cmd = raw.trim().toLowerCase();
+    // Turkish-locale lowercase so "İngilizce"/"TÜRKÇE" fold correctly (plain
+    // toLowerCase mangles the dotted İ).
+    const trCmd = raw.trim().toLocaleLowerCase('tr-TR');
+
+    if (THEME_WORD_RE.test(trCmd) && DARK_RE.test(trCmd)) {
+      setTheme('dark');
+      print({ kind: 'system', text: language === 'tr' ? 'karanlık moda geçildi.' : 'switched to dark mode.' });
+      return true;
+    }
+    if (THEME_WORD_RE.test(trCmd) && LIGHT_RE.test(trCmd)) {
+      setTheme('light');
+      print({ kind: 'system', text: language === 'tr' ? 'aydınlık moda geçildi.' : 'switched to light mode.' });
+      return true;
+    }
+    if (TURKISH_RE.test(trCmd)) {
+      setLanguage('tr');
+      print({ kind: 'system', text: 'türkçeye geçildi.' });
+      return true;
+    }
+    if (ENGLISH_RE.test(trCmd)) {
+      setLanguage('en');
+      print({ kind: 'system', text: 'switched to english.' });
+      return true;
+    }
+
     switch (cmd) {
       case 'help':
         print({
@@ -85,7 +123,7 @@ const Chat = () => {
         });
         return true;
       case 'clear':
-        setLines([{ kind: 'boot', text: t('termHint') }]);
+        setLines([{ kind: 'assistant', text: t('chatIntro') }]);
         return true;
       case 'cv':
       case 'github':
@@ -163,68 +201,35 @@ const Chat = () => {
 
   return (
     <div className="term" onClick={() => inputRef.current?.focus()}>
-      <div className="term-bar">
-        <span className="term-dots">
-          <span className="term-dot" style={{ background: '#ff5f56' }} />
-          <span className="term-dot" style={{ background: '#ffbd2e' }} />
-          <span className="term-dot" style={{ background: '#27c93f' }} />
-        </span>
-        <span className="term-title">anil@yazici — ~/chat</span>
-      </div>
-
       <div className="term-body" ref={bodyRef}>
         {lines.map((l, i) => {
           if (l.kind === 'user') {
             return (
-              <div className="term-line" key={i}>
-                <span className="prompt">visitor@web</span>
-                <span className="muted">:~$ </span>
-                {l.text}
+              <div className="msg-row msg-row-user msg-in" key={i}>
+                <div className="msg-bubble msg-bubble-user">{l.text}</div>
               </div>
             );
           }
           if (l.kind === 'assistant') {
             return (
-              <div className="term-line" key={i} style={{ marginTop: '0.2rem' }}>
-                <span className="prompt">anil</span>
-                <span className="muted"> ❯ </span>
-                {l.text}
-                {lastIsStreamingAssistant(i) && <span className="cursor" />}
-                {loading && !l.text && !streaming && (
-                  <span className="typing"><span /><span /><span /></span>
-                )}
-              </div>
-            );
-          }
-          if (l.kind === 'boot') {
-            return (
-              <div className="term-line term-boot" key={i}>
-                {l.text}
+              <div className="msg-row msg-row-assistant msg-in" key={i}>
+                <Anil />
+                <div className="msg-bubble msg-bubble-assistant">
+                  {l.text}
+                  {lastIsStreamingAssistant(i) && <span className="cursor" />}
+                  {loading && !l.text && !streaming && (
+                    <span className="typing"><span /><span /><span /></span>
+                  )}
+                </div>
               </div>
             );
           }
           return (
-            <div className="term-line muted" key={i} style={{ marginTop: '0.15rem' }}>
-              {l.text}
+            <div className="msg-row msg-row-assistant msg-in" key={i}>
+              <div className="msg-bubble msg-bubble-system muted">{l.text}</div>
             </div>
           );
         })}
-
-        {/* clickable suggestions before the first question */}
-        {!started && (
-          <div style={{ marginTop: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-            {suggestedQuestions[language].map((q) => (
-              <button
-                key={q}
-                type="button"
-                className="term-suggest"
-                onClick={() => send(q)}
-              >
-                » {q}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       <form
@@ -234,8 +239,6 @@ const Chat = () => {
           send(input);
         }}
       >
-        <span className="prompt">visitor@web</span>
-        <span className="muted">:~$</span>
         <input
           ref={inputRef}
           className="term-input"
@@ -247,6 +250,12 @@ const Chat = () => {
           spellCheck={false}
           autoComplete="off"
         />
+        <button type="submit" className="send-btn" aria-label={t('chatSend')} disabled={loading || !input.trim()}>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        </button>
       </form>
     </div>
   );

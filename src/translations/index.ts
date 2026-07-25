@@ -25,7 +25,7 @@ export const translations = {
     downloadCV: "Download CV",
     chatTitle: "yusuf anıl yazıcı",
     chatIntro:
-      "i'm anıl, a computer engineer. ask me about my work, projects, or skills — i'll answer like it's really me.",
+      "i'm anıl, a computer engineer. ask me about my work, projects, or skills.",
     chatPlaceholder: "type your question...",
     chatSend: "send",
     chatThinking: "anıl is typing...",
@@ -59,7 +59,7 @@ export const translations = {
     downloadCV: "CV İndir",
     chatTitle: "yusuf anıl yazıcı",
     chatIntro:
-      "ben anıl, bir bilgisayar mühendisi. işlerim, projelerim veya yeteneklerim hakkında soru sor — sanki gerçekten benmişim gibi cevaplayayım.",
+      "ben anıl, bir bilgisayar mühendisi. işlerim, projelerim veya yeteneklerim hakkında soru sor.",
     chatPlaceholder: "sorunu yaz...",
     chatSend: "gönder",
     chatThinking: "anıl yazıyor...",
@@ -67,21 +67,4 @@ export const translations = {
     chatReset: "sohbeti sıfırla",
     termHint: "bir soru yaz ya da `help`.",
   },
-};
-
-// Suggested-question chips (arrays, kept out of `translations` so the `t()`
-// helper keeps returning plain strings).
-export const suggestedQuestions = {
-  en: [
-    "what did you do at riskoptima?",
-    "what are your strongest skills?",
-    "tell me about your blockchain work.",
-    "what are you studying?",
-  ],
-  tr: [
-    "riskoptima'da ne yaptın?",
-    "en güçlü yeteneklerin neler?",
-    "blockchain çalışmalarından bahset.",
-    "ne okuyorsun?",
-  ],
 };
