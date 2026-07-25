@@ -1,0 +1,72 @@
+name: Deploy
+
+# CI builds the image (the server never runs `next build` — it would OOM on the
+# 4GB box alongside Coolify), pushes to GHCR, then tells Coolify to pull and
+# redeploy.
+#
+#   push to main -> image :latest -> Coolify app
+#
+# Auto-deploy fires only if the COOLIFY_* secrets are set; otherwise the image
+# is built and you click Redeploy in Coolify (semi-auto).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: meta
+        run: echo "sha_tag=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.sha_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify deploy (if configured)
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${COOLIFY_URL}" ]; then
+            echo "COOLIFY_URL not set — image built & pushed. Redeploy manually in Coolify."
+            exit 0
+          fi
+          curl --fail --silent --show-error \
+            "${COOLIFY_URL}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false" \
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}"
+          echo "Triggered Coolify deploy."
