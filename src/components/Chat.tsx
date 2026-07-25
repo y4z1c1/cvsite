@@ -47,8 +47,15 @@ const LIGHT_RE = /\b(light|açık|aydınlık)\b/i;
 const THEME_WORD_RE = /\b(theme|mode|tema|mod)\b/i;
 const TURKISH_RE = /\b(türkçe|turkish)\b/i;
 const ENGLISH_RE = /\b(english|ingilizce)\b/i;
-const CAREER_RE = /\b(experience|career|work history|deneyim(ler(in)?)?|kariyer(in)?|iş geçmişi|riskoptima|turkish technology|suicity)\b/i;
+const CAREER_RE = /\b(experience|career|work history|your work|jobs?|deneyim(ler(in)?)?|kariyer(in)?|iş geçmişi|işler(in)?|çalışmaların|riskoptima|turkish technology|suicity)\b/i;
 const PROJECTS_RE = /\b(projects?|projeler(in)?|proje|bo[gğ]azi[cç]i ?[cç]im|bogazicicim)\b/i;
+
+// The LLM can request a UI card by ending its reply with [[show:...]] (see
+// persona.ts "UI cards"). Markers are stripped from the visible text; a
+// trailing half-arrived "[[show:tim" is withheld too so it never flashes.
+const MARKER_RE = /\[\[show:(timeline|project:([a-z0-9-]+))\]\]/;
+const stripMarkers = (s: string) =>
+  s.replace(/\[\[show:[^\]]*\]\]/g, '').replace(/\[\[[^\]]*$/, '').replace(/\n?\[error\]$/, '').trimEnd();
 
 const Chat = () => {
   const { language, setLanguage } = useContext(LanguageContext);
@@ -186,14 +193,32 @@ const Chat = () => {
         if (done) break;
         acc += decoder.decode(value, { stream: true });
         setStreaming(true);
-        const clean = acc.replace(/\n?\[error\]$/, '');
+        const clean = stripMarkers(acc);
         setLines((prev) => {
           const c = [...prev];
           c[c.length - 1] = { kind: 'assistant', text: clean };
           return c;
         });
       }
-      if (!acc.replace(/\n?\[error\]$/, '').trim()) throw new Error('empty');
+      if (!stripMarkers(acc).trim() && !MARKER_RE.test(acc)) throw new Error('empty');
+
+      // Model asked for a UI card — append it after the text bubble.
+      const marker = acc.match(MARKER_RE);
+      if (marker) {
+        const card: Line = marker[1] === 'timeline'
+          ? { kind: 'timeline' }
+          : { kind: 'project', id: marker[2] };
+        if (card.kind === 'timeline' || PROJECTS.some((p) => p.id === card.id)) {
+          setLines((prev) => {
+            const c = [...prev];
+            // Drop the text bubble entirely if the model sent only a marker.
+            const last = c[c.length - 1];
+            if (last && last.kind === 'assistant' && !last.text.trim()) c.pop();
+            c.push(card);
+            return c;
+          });
+        }
+      }
     } catch {
       setLines((prev) => {
         const c = [...prev];

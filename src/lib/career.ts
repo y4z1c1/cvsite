@@ -138,7 +138,7 @@ export const EXPERIENCES: Experience[] = [
     id: 'bogazici',
     company: 'Boğaziçi University',
     role: { en: 'B.Sc. Computer Engineering', tr: 'Bilgisayar Mühendisliği Lisans' },
-    date: { en: '2021 – 2026', tr: '2021 – 2026' },
+    date: { en: 'Sep 2021 – Jun 2026', tr: 'Eylül 2021 – Haziran 2026' },
     logoId: 'bogazici',
     kind: 'education',
     tech: [],
