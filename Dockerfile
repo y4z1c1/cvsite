@@ -11,8 +11,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-# No NEXT_PUBLIC_* build args: nothing in this app is inlined into the client
-# bundle. FAL_KEY is server-side only and injected by Coolify at runtime.
+# NEXT_PUBLIC_* values are inlined into the client bundle at build time, so
+# they arrive as build args (from GitHub secrets in CI), not runtime env.
+# FAL_KEY is server-side only and injected by Coolify at runtime instead.
+ARG NEXT_PUBLIC_UMAMI_SRC
+ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID
+ENV NEXT_PUBLIC_UMAMI_SRC=$NEXT_PUBLIC_UMAMI_SRC \
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID=$NEXT_PUBLIC_UMAMI_WEBSITE_ID
 RUN npm run build
 
 FROM node:22-alpine AS runner

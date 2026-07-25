@@ -48,6 +48,9 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ steps.meta.outputs.sha_tag }}
+          build-args: |
+            NEXT_PUBLIC_UMAMI_SRC=${{ secrets.NEXT_PUBLIC_UMAMI_SRC }}
+            NEXT_PUBLIC_UMAMI_WEBSITE_ID=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
