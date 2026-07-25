@@ -485,6 +485,8 @@ textarea { resize: none; }
      the 50vh spotlight centering is a desktop affordance. */
   .spot-spacer { display: none; }
   .spot-input-row { margin-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  /* ≥16px input font — anything smaller makes iOS Safari zoom in on focus. */
+  .term-input { font-size: 16px; }
   .msg-bubble { max-width: 88%; }
   .msg-bubble-rich { max-width: 100%; }
   .timeline-head { flex-direction: column; align-items: flex-start; gap: 0.2rem; }

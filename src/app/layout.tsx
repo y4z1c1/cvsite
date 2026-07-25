@@ -48,6 +48,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Stops iOS Safari's auto-zoom on input focus. Since iOS 10 this does NOT
+  // block manual pinch-zoom, so accessibility is unaffected.
+  maximumScale: 1,
+  // Mobile keyboard resizes the layout (100dvh shrinks) instead of overlaying
+  // it, so the input row slides up above the keyboard.
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({
