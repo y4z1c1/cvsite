@@ -114,6 +114,14 @@ export async function POST(req: Request) {
     return Response.json({ error: 'No messages provided' }, { status: 400 });
   }
 
+  // fal rejects system_prompt over 5000 chars with an opaque 400 — this has
+  // silently broken the whole chat before when persona.ts grew. Fail loudly
+  // in the log instead of a mystery [error] in the UI.
+  const systemPrompt = buildSystemPrompt();
+  if (systemPrompt.length > 4800) {
+    console.error(`chat route: system prompt is ${systemPrompt.length} chars, near fal's 5000 limit — trim persona.ts`);
+  }
+
   fal.config({ credentials: falKey });
 
   // Stream the reply token-by-token. any-llm emits cumulative `output` per
@@ -140,7 +148,7 @@ export async function POST(req: Request) {
         const falStream = await fal.stream('fal-ai/any-llm', {
           input: {
             model: MODEL,
-            system_prompt: buildSystemPrompt(),
+            system_prompt: systemPrompt,
             prompt: renderConversation(messages),
           },
         });

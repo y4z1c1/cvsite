@@ -42,20 +42,22 @@ const Anil = () => (
 // Loose keyword matching for chat-driven quick actions — not full NLU, just
 // enough to catch "dark mode", "koyu tema", "türkçeye geç", "show me your
 // career", "bogazicicim" etc. locally without an LLM round-trip.
-const DARK_RE = /\b(dark|koyu|karanlık)\b/i;
-const LIGHT_RE = /\b(light|açık|aydınlık)\b/i;
-const THEME_WORD_RE = /\b(theme|mode|tema|mod)\b/i;
+// \w* tails absorb Turkish suffixes ("temaya", "moda", "karanlığa").
+const DARK_RE = /\b(dark|koyu|karanlı[kğ]\w*)/i;
+const LIGHT_RE = /\b(light|açık|aydınlık)/i;
+const THEME_WORD_RE = /\b(theme|mode|tema\w*|mod\w*)/i;
 const TURKISH_RE = /\b(türkçe|turkish)\b/i;
 const ENGLISH_RE = /\b(english|ingilizce)\b/i;
 const CAREER_RE = /\b(experience|career|work history|your work|jobs?|deneyim(ler(in)?)?|kariyer(in)?|iş geçmişi|işler(in)?|çalışmaların|riskoptima|turkish technology|suicity)\b/i;
 const PROJECTS_RE = /\b(projects?|projeler(in)?|proje|bo[gğ]azi[cç]i ?[cç]im|bogazicicim)\b/i;
 
-// The LLM can request a UI card by ending its reply with [[show:...]] (see
-// persona.ts "UI cards"). Markers are stripped from the visible text; a
-// trailing half-arrived "[[show:tim" is withheld too so it never flashes.
-const MARKER_RE = /\[\[show:(timeline|project:([a-z0-9-]+))\]\]/;
+// The LLM can request UI actions by ending its reply with [[show:...]] or
+// [[set:...]] tokens (see persona.ts "UI actions"). Markers are stripped from
+// the visible text; a trailing half-arrived "[[show:tim" is withheld too so
+// it never flashes.
+const MARKER_RE = /\[\[(show|set):([a-z:_-]+)\]\]/g;
 const stripMarkers = (s: string) =>
-  s.replace(/\[\[show:[^\]]*\]\]/g, '').replace(/\[\[[^\]]*$/, '').replace(/\n?\[error\]$/, '').trimEnd();
+  s.replace(/\[\[(?:show|set):[^\]]*\]\]/g, '').replace(/\[\[[^\]]*$/, '').replace(/\n?\[error\]$/, '').trimEnd();
 
 const Chat = () => {
   const { language, setLanguage } = useContext(LanguageContext);
@@ -200,15 +202,26 @@ const Chat = () => {
           return c;
         });
       }
-      if (!stripMarkers(acc).trim() && !MARKER_RE.test(acc)) throw new Error('empty');
+      const markers = Array.from(acc.matchAll(MARKER_RE));
+      if (!stripMarkers(acc).trim() && markers.length === 0) throw new Error('empty');
 
-      // Model asked for a UI card — append it after the text bubble.
-      const marker = acc.match(MARKER_RE);
-      if (marker) {
-        const card: Line = marker[1] === 'timeline'
+      // Execute whatever UI actions the model requested.
+      for (const m of markers) {
+        const [, verb, arg] = m;
+        if (verb === 'set') {
+          if (arg === 'theme:dark') setTheme('dark');
+          else if (arg === 'theme:light') setTheme('light');
+          else if (arg === 'lang:tr') setLanguage('tr');
+          else if (arg === 'lang:en') setLanguage('en');
+          continue;
+        }
+        // show: append the card after the text bubble.
+        const card: Line | null = arg === 'timeline'
           ? { kind: 'timeline' }
-          : { kind: 'project', id: marker[2] };
-        if (card.kind === 'timeline' || PROJECTS.some((p) => p.id === card.id)) {
+          : arg.startsWith('project:') && PROJECTS.some((p) => p.id === arg.slice(8))
+            ? { kind: 'project', id: arg.slice(8) }
+            : null;
+        if (card) {
           setLines((prev) => {
             const c = [...prev];
             // Drop the text bubble entirely if the model sent only a marker.

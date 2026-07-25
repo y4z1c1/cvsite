@@ -55,4 +55,36 @@ export const PROJECTS: Project[] = [
     },
     links: [{ label: 'bogazicicim.com', url: 'https://bogazicicim.com' }],
   },
+  {
+    id: 'cvsite',
+    name: 'yusufanilyazici.com',
+    tagline: {
+      en: 'this website — an AI persona of me you can chat with',
+      tr: 'bu site — benimle sohbet edebildiğin bir yapay zeka personam',
+    },
+    description: {
+      en: 'The site you are on right now. A Next.js portfolio where an LLM answers as me with streaming replies, rich UI cards (this one included), and chat-driven theme/language switching.',
+      tr: 'Şu an içinde olduğun site. Bir LLM\'in benim yerime yanıt verdiği Next.js portfolyo: akan yanıtlar, zengin UI kartları (bu kart dahil) ve sohbetten tema/dil değiştirme.',
+    },
+    logoId: 'cvsite',
+    tech: ['nextjs', 'typescript', 'docker', 'github-actions', 'cloudflare', 'hetzner'],
+    stats: [],
+    deploySteps: {
+      en: [
+        'push to main → GitHub Actions builds a standalone Next.js Docker image',
+        'image pushed to GHCR (never built on the server)',
+        'Coolify webhook pulls & rolling-deploys on a Hetzner box',
+        'Traefik terminates TLS, Cloudflare proxies DNS',
+        'chat streams from fal.ai through an /api/chat route',
+      ],
+      tr: [
+        'main\'e push → GitHub Actions standalone Next.js Docker imajı derler',
+        'imaj GHCR\'a gönderilir (sunucuda asla build alınmaz)',
+        'Coolify webhook\'u Hetzner sunucusunda rolling deploy başlatır',
+        'TLS Traefik\'te sonlanır, DNS Cloudflare proxy\'sinden geçer',
+        'sohbet /api/chat üzerinden fal.ai\'den akar',
+      ],
+    },
+    links: [{ label: 'github.com/y4z1c1/cvsite', url: 'https://github.com/y4z1c1/cvsite' }],
+  },
 ];
