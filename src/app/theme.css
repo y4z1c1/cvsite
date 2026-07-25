@@ -1,0 +1,316 @@
+/* ============================================================
+   Terminal Lux — refined tokens layered over monospace.css
+   ============================================================ */
+
+:root {
+  /* fonts (CSS vars injected by next/font in layout.tsx) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "JetBrains Mono", monospace;
+
+  --accent: #d3ff4f;
+  --accent-contrast: #0b0b0c;
+  --accent-dim: rgba(211, 255, 79, 0.16);
+
+  /* one uniform corner radius everywhere */
+  --radius: 8px;
+  --radius-sm: 8px;
+  --radius-pill: 8px;
+
+  /* light (default) */
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-alt: #efefec;
+  --border: rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.20);
+  --text: #16161a;
+  --muted: #6b6b70;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 14px 34px rgba(0, 0, 0, 0.09);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --term-bg: #f5f5f2;
+  --term-boot: #3b6fd4;
+
+  /* remap legacy vars used by existing inline styles */
+  --text-color: var(--text);
+  --background-color: var(--bg);
+  --background-color-alt: var(--surface-alt);
+  --text-color-alt: var(--muted);
+  --border-thickness: 1px;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b0b0c;
+  --surface: #141417;
+  --surface-alt: #1c1c20;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --text: #ededed;
+  --muted: #8b8b90;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --term-bg: #0b0b0d;
+  --term-boot: #8ab4ff;
+
+  color-scheme: dark;
+}
+
+/* ---- base ---- */
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  max-width: none;            /* let the app center its own column */
+  padding: 0;
+}
+
+/* the monospace base adds a global flow margin between siblings; we manage
+   spacing explicitly with flex gap + margins inside the app */
+main * + * {
+  margin-top: 0;
+}
+main p {
+  hyphens: none;
+  overflow-wrap: anywhere;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+
+.mono { font-family: var(--font-mono); }
+.muted { color: var(--muted); }
+
+a {
+  color: var(--text);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+a:hover { color: var(--accent); }
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+/* ---- controls: soften the brutalist borders ---- */
+button,
+input,
+textarea {
+  font-family: var(--font-sans);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-transform: none;
+  transition: background 0.15s ease, border-color 0.15s ease,
+    transform 0.06s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+button { cursor: pointer; }
+button:hover {
+  background: var(--surface-alt);
+  border-color: var(--border-strong);
+}
+button:active { transform: translateY(1px); }
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+
+textarea { resize: none; }
+
+/* refined scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- reusable pieces ---- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.2;
+  padding: 0.42rem 0.82rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.chip:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ---- terminal ---- */
+.term {
+  font-family: var(--font-mono);
+  background: var(--term-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: text;
+}
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+}
+.term-dots { display: flex; gap: 0.45rem; }
+.term-dot { width: 11px; height: 11px; border-radius: 50%; }
+.term-title { font-size: 0.78rem; color: var(--muted); }
+.term-body {
+  padding: 0.9rem;
+  max-height: 58vh;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.term-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.prompt { color: var(--accent); font-weight: 600; }
+.term-boot { color: var(--term-boot); }
+
+.term-input-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5ch;
+  padding: 0.1rem 0.9rem 0.9rem;
+  font-family: var(--font-mono);
+}
+.term-input {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  caret-color: var(--accent);
+}
+.term-input:focus,
+.term-input:focus-visible {
+  outline: none;
+  border: none;
+}
+
+.term-suggest {
+  align-self: flex-start;
+  padding: 0.18rem 0.6rem;
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--accent-contrast);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.12s ease, transform 0.06s ease;
+}
+.term-suggest:hover { background: var(--accent); opacity: 0.85; }
+.term-suggest:active { transform: translateY(1px); }
+
+.msg-in { animation: fadeInUp 0.28s ease both; }
+
+.cursor {
+  display: inline-block;
+  width: 0.6ch;
+  height: 1.05em;
+  margin-left: 1px;
+  transform: translateY(2px);
+  background: var(--accent);
+  animation: blink 1.05s steps(1) infinite;
+}
+
+.typing {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0.1rem 0;
+}
+.typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: typingBlink 1.2s infinite ease-in-out;
+}
+.typing span:nth-child(2) { animation-delay: 0.18s; }
+.typing span:nth-child(3) { animation-delay: 0.36s; }
+
+/* ---- markdown inside assistant bubbles ---- */
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md p { margin: 0.5em 0; }
+.md ul, .md ol { margin: 0.5em 0; padding-left: 1.3em; }
+.md ul { list-style: disc; }
+.md ol { list-style: decimal; }
+.md li { margin: 0.15em 0; }
+.md a { color: var(--accent); }
+.md strong { font-weight: 700; }
+.md code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--surface-alt);
+  padding: 0.1em 0.4em;
+  border-radius: 6px;
+}
+.md pre {
+  background: var(--surface-alt);
+  padding: 0.8em;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: 0.6em 0;
+}
+.md pre code { background: none; padding: 0; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+@keyframes typingBlink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-in, .cursor, .typing span { animation: none; }
+}
