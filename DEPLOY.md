@@ -28,10 +28,11 @@ Redeploy in Coolify by hand.
 
 ### 2. DNS
 
-Add an **A record** in Cloudflare pointing the domain at the server's IP, with
-the proxy **on** (orange cloud). SSL/TLS mode stays **Full (strict)** — Coolify's
-Traefik terminates TLS with its own Let's Encrypt cert, so nothing needs to be
-mounted manually.
+Domain: **yusufanilyazici.com**. Add an **A record** in Cloudflare pointing
+`yusufanilyazici.com` (and `www`) at the server's IP, with the proxy **on**
+(orange cloud). SSL/TLS mode stays **Full (strict)** — Coolify's Traefik
+terminates TLS with its own Let's Encrypt cert, so nothing needs to be mounted
+manually.
 
 ### 3. Coolify app
 
@@ -42,7 +43,7 @@ New Resource → **Docker Image**:
   `bogazicicim` uses, if the package is private — make the package public and
   no credentials are needed)
 - Port: `3000`
-- Domain: the production hostname
+- Domain: `yusufanilyazici.com` (and `www.yusufanilyazici.com`)
 - Health check path: `/api/health`
 
 ### 4. Runtime env

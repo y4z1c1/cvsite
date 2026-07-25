@@ -18,11 +18,29 @@ const mono = JetBrains_Mono({
   display: 'swap',
 });
 
+const SITE_URL = 'https://yusufanilyazici.com';
+const OG_IMAGE = 'https://avatars.githubusercontent.com/u/56488393?v=4';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'yusuf anıl yazıcı',
   description: 'yusuf anıl yazıcı — computer engineer. ask me anything.',
   icons: {
-    icon: 'https://avatars.githubusercontent.com/u/56488393?v=4',
+    icon: OG_IMAGE,
+  },
+  openGraph: {
+    title: 'yusuf anıl yazıcı',
+    description: 'yusuf anıl yazıcı — computer engineer. ask me anything.',
+    url: SITE_URL,
+    siteName: 'yusuf anıl yazıcı',
+    images: [OG_IMAGE],
+    type: 'profile',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'yusuf anıl yazıcı',
+    description: 'yusuf anıl yazıcı — computer engineer. ask me anything.',
+    images: [OG_IMAGE],
   },
 };
 
