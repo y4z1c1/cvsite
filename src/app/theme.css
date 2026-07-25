@@ -188,7 +188,7 @@ textarea { resize: none; }
   cursor: text;
 }
 .spot-messages {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   font-size: 0.92rem;
@@ -204,8 +204,12 @@ textarea { resize: none; }
   gap: 0.9rem;
   padding: 3rem 0 1rem;
 }
+/* Keeps the input at ~50vh while the conversation is short. The huge shrink
+   factor makes this spacer collapse before anything else once content grows
+   (e.g. a tall timeline/project card renders), sliding the input down to the
+   bottom so the messages get the full viewport height. */
 .spot-spacer {
-  flex: 1 1 0;
+  flex: 0 999 calc(50dvh - 1.5rem);
   min-height: 0;
 }
 
