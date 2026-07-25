@@ -24,6 +24,19 @@ const ProjectCard = ({ project, language }: Props) => (
 
     <p className="project-desc">{project.description[language]}</p>
 
+    {project.stats.length > 0 && (
+      <div className="project-stats">
+        {project.stats.map((s) => (
+          <div className="project-stat" key={s.label.en}>
+            <span className="project-stat-value">
+              {s.value.toLocaleString(language === 'tr' ? 'tr-TR' : 'en-US')}
+            </span>
+            <span className="project-stat-label">{s.label[language]}</span>
+          </div>
+        ))}
+      </div>
+    )}
+
     <div className="tech-row">
       {project.tech.map((id) => {
         const { label, Icon } = TECH_ICONS[id];

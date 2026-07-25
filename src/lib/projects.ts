@@ -8,6 +8,8 @@ export type Project = {
   /** Filename stem looked up as /logos/{logoId}.png; falls back to a generic icon. */
   logoId: string;
   tech: TechId[];
+  /** Live platform numbers; formatted per-locale at render time. */
+  stats: { value: number; label: { en: string; tr: string } }[];
   deploySteps: { en: string[]; tr: string[] };
   links: { label: string; url: string }[];
 };
@@ -26,6 +28,15 @@ export const PROJECTS: Project[] = [
     },
     logoId: 'bogazicicim',
     tech: ['nextjs', 'typescript', 'supabase', 'tailwind', 'docker', 'github-actions', 'cloudflare', 'hetzner'],
+    stats: [
+      { value: 3239, label: { en: 'users', tr: 'kullanıcı' } },
+      { value: 17815, label: { en: 'course/teacher reviews', tr: 'ders/hoca yorumu' } },
+      { value: 2008, label: { en: 'teachers', tr: 'hoca' } },
+      { value: 4206, label: { en: 'courses', tr: 'ders' } },
+      { value: 50, label: { en: 'clubs', tr: 'kulüp' } },
+      { value: 1812, label: { en: 'club reviews', tr: 'kulüp yorumu' } },
+      { value: 34997, label: { en: 'forum posts', tr: 'forum gönderisi' } },
+    ],
     deploySteps: {
       en: [
         'push to main → GitHub Actions builds a standalone Next.js Docker image',

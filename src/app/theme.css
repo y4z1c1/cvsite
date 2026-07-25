@@ -432,6 +432,28 @@ textarea { resize: none; }
   margin: 0;
   font-size: 0.88rem;
 }
+.project-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.7rem;
+}
+.project-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.project-stat-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.project-stat-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .project-pipeline-title {
   font-size: 0.75rem;
   font-weight: 700;
@@ -455,6 +477,10 @@ textarea { resize: none; }
     max-width: none;
     padding: 0 0.75rem;
   }
+  /* On small screens the input docks to the bottom like a normal chat app —
+     the 50vh spotlight centering is a desktop affordance. */
+  .spot-spacer { display: none; }
+  .spot-input-row { margin-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
   .msg-bubble { max-width: 88%; }
   .msg-bubble-rich { max-width: 100%; }
   .timeline-head { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
