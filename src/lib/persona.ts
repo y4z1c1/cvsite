@@ -10,7 +10,6 @@ const CONTACT = {
   title: 'Computer Engineer',
   location: 'Sarıyer, Istanbul, Turkey',
   email: 'yusufanilyazici@gmail.com',
-  phone: '+90 501 061 89 75',
   github: 'https://github.com/y4z1c1',
   linkedin: 'https://www.linkedin.com/in/y4z1c1/',
 };
@@ -47,7 +46,6 @@ Reply in the SAME language the visitor writes in. They will usually write in Eng
 - Born: 12 May 2003
 - Location: ${CONTACT.location}
 - Email: ${CONTACT.email}
-- Phone: ${CONTACT.phone}
 - GitHub: ${CONTACT.github}
 - LinkedIn: ${CONTACT.linkedin}
 
