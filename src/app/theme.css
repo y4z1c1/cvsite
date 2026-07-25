@@ -166,33 +166,62 @@ textarea { resize: none; }
   background: var(--accent-dim);
 }
 
-/* ---- terminal ---- */
-.term {
+/* ---- spotlight layout ----
+   Three stacked regions inside a full-height column: a scrollable message
+   area, the input row, and an empty spacer. The message area and spacer share
+   equal flex-basis, which pins the input row at exactly 50% of the viewport
+   height no matter how long the conversation gets — overflow scrolls inside
+   the message region instead of pushing the input down. */
+.spot-main {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+}
+.spot-col {
+  width: 100%;
+  max-width: 44rem;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
   font-family: var(--font-mono);
-  background: var(--term-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
   cursor: text;
 }
-.term-body {
-  padding: 1rem;
-  max-height: 62vh;
+.spot-messages {
+  flex: 1 1 0;
+  min-height: 0;
   overflow-y: auto;
   font-size: 0.92rem;
   line-height: 1.55;
+  /* fade content out near the top edge instead of hard-clipping */
+  mask-image: linear-gradient(to bottom, transparent 0, black 2.5rem);
+}
+.spot-messages-inner {
+  min-height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 0.9rem;
+  padding: 3rem 0 1rem;
+}
+.spot-spacer {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
-.term-input-row {
+.spot-input-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.7rem 0.9rem;
-  border-top: 1px solid var(--border);
+  flex: 0 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.spot-input-row:focus-within {
+  border-color: var(--accent);
 }
 .term-input {
   flex: 1;
@@ -260,8 +289,176 @@ textarea { resize: none; }
   border: 1px dashed var(--border);
   font-size: 0.88rem;
 }
+.msg-bubble-rich {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  max-width: 100%;
+  flex: 1;
+  padding: 0.9rem;
+}
 
 .msg-in { animation: fadeInUp 0.28s ease both; }
+
+/* ---- logos ---- */
+.logo-img {
+  border-radius: var(--radius);
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  flex: 0 0 auto;
+}
+.logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+/* ---- tech chips ---- */
+.tech-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.tech-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.28rem 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tech-chip svg { color: var(--accent); }
+[data-theme="light"] .tech-chip svg,
+:root:not([data-theme="dark"]) .tech-chip svg { color: #7a9c1e; }
+
+/* ---- career timeline ---- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+.timeline-item {
+  display: flex;
+  gap: 0.8rem;
+}
+.timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.timeline-line {
+  flex: 1;
+  width: 2px;
+  min-height: 0.8rem;
+  margin: 0.35rem 0;
+  background: var(--border);
+  border-radius: 1px;
+}
+.timeline-item:last-child .timeline-line { display: none; }
+.timeline-content {
+  padding-bottom: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.timeline-item:last-child .timeline-content { padding-bottom: 0; }
+.timeline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.55rem;
+}
+.timeline-role { font-weight: 700; }
+.timeline-company { color: var(--muted); }
+.timeline-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0.12rem 0.5rem;
+  white-space: nowrap;
+}
+.timeline-bullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ---- project card ---- */
+.project-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.project-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.project-name {
+  font-weight: 700;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.project-link {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--accent);
+  text-decoration: none;
+}
+.project-link:hover { text-decoration: underline; }
+.project-tagline {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.project-desc {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.project-pipeline-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.project-pipeline ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.83rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* ---- responsive: full-bleed on mobile/tablet ---- */
+@media (max-width: 768px) {
+  .spot-col {
+    max-width: none;
+    padding: 0 0.75rem;
+  }
+  .msg-bubble { max-width: 88%; }
+  .msg-bubble-rich { max-width: 100%; }
+  .timeline-head { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+}
 
 .cursor {
   display: inline-block;

@@ -3,13 +3,16 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { LanguageContext } from '../context/LanguageContext';
 import { useTranslation } from '../hooks/useTranslation';
+import CareerTimeline from './CareerTimeline';
+import ProjectCard from './ProjectCard';
+import { PROJECTS } from '../lib/projects';
 
 type Line =
   | { kind: 'system'; text: string }
   | { kind: 'user'; text: string }
-  | { kind: 'assistant'; text: string };
-
-const SKILLS = 'python · java · typescript · react · move · solidity · django';
+  | { kind: 'assistant'; text: string }
+  | { kind: 'timeline' }
+  | { kind: 'project'; id: string };
 
 const LINKS: Record<string, string> = {
   cv: '/resume-yusuf-anil-yazici.pdf',
@@ -36,22 +39,21 @@ const Anil = () => (
   />
 );
 
-// Loose keyword matching for chat-driven theme/language switches — not full
-// NLU, just enough to catch "dark mode", "koyu tema", "türkçeye geç", etc.
-// Requires a color word + a "theme/mode" word together to avoid firing on
-// unrelated sentences that happen to mention "dark" or "light".
+// Loose keyword matching for chat-driven quick actions — not full NLU, just
+// enough to catch "dark mode", "koyu tema", "türkçeye geç", "show me your
+// career", "bogazicicim" etc. locally without an LLM round-trip.
 const DARK_RE = /\b(dark|koyu|karanlık)\b/i;
 const LIGHT_RE = /\b(light|açık|aydınlık)\b/i;
 const THEME_WORD_RE = /\b(theme|mode|tema|mod)\b/i;
 const TURKISH_RE = /\b(türkçe|turkish)\b/i;
 const ENGLISH_RE = /\b(english|ingilizce)\b/i;
+const CAREER_RE = /\b(experience|career|work history|deneyim(ler(in)?)?|kariyer(in)?|iş geçmişi|riskoptima|turkish technology|suicity)\b/i;
+const PROJECTS_RE = /\b(projects?|projeler(in)?|proje|bo[gğ]azi[cç]i ?[cç]im|bogazicicim)\b/i;
 
 const Chat = () => {
   const { language, setLanguage } = useContext(LanguageContext);
   const { setTheme } = useTheme();
   const { t } = useTranslation();
-
-  const lc = (s: string) => s.toLocaleLowerCase(language === 'tr' ? 'tr-TR' : 'en-US');
 
   const [lines, setLines] = useState<Line[]>([{ kind: 'assistant', text: t('chatIntro') }]);
   const [input, setInput] = useState('');
@@ -60,9 +62,25 @@ const Chat = () => {
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Pin the message area to the bottom. Instant (not smooth) because a tall
+  // rich card can outrun a smooth animation mid-flight; the ResizeObserver
+  // catches any late layout growth (images, streaming) the effect misses.
   useEffect(() => {
-    bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: 'smooth' });
+    const el = bodyRef.current;
+    if (!el) return;
+    requestAnimationFrame(() => el.scrollTo({ top: el.scrollHeight }));
   }, [lines, loading]);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    const inner = el?.firstElementChild;
+    if (!el || !inner) return;
+    const ro = new ResizeObserver(() => {
+      el.scrollTo({ top: el.scrollHeight });
+    });
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, []);
 
   const print = (...ls: Line[]) => setLines((prev) => [...prev, ...ls]);
 
@@ -93,13 +111,21 @@ const Chat = () => {
       print({ kind: 'system', text: 'switched to english.' });
       return true;
     }
+    if (CAREER_RE.test(trCmd)) {
+      print({ kind: 'timeline' });
+      return true;
+    }
+    if (PROJECTS_RE.test(trCmd)) {
+      print({ kind: 'project', id: 'bogazicicim' });
+      return true;
+    }
 
     switch (cmd) {
       case 'help':
         print({
           kind: 'system',
           text:
-            'commands: help · about · skills · experience · cv · github · linkedin · email · clear\nor just ask me anything in plain english / türkçe.',
+            'commands: help · about · skills · experience · projects · cv · github · linkedin · email · clear\nor just ask me anything in plain english / türkçe.',
         });
         return true;
       case 'about':
@@ -109,18 +135,7 @@ const Chat = () => {
         });
         return true;
       case 'skills':
-        print({ kind: 'system', text: SKILLS });
-        return true;
-      case 'experience':
-        print({
-          kind: 'system',
-          text: [
-            `- ${lc(t('turkishTechRole'))}${lc(t('turkishTechDate'))}`,
-            `- ${lc(t('riskOptimaRole'))}${lc(t('riskOptimaDate'))}`,
-            `- ${lc(t('suiCityRole'))}${lc(t('suiCityDate'))}`,
-            `- ${lc(t('freelanceRole'))}${lc(t('freelanceDate'))}`,
-          ].join('\n'),
-        });
+        print({ kind: 'system', text: 'python · java · typescript · react · move · solidity · django' });
         return true;
       case 'clear':
         setLines([{ kind: 'assistant', text: t('chatIntro') }]);
@@ -152,8 +167,8 @@ const Chat = () => {
 
     try {
       const history = lines
-        .filter((l) => l.kind === 'user' || l.kind === 'assistant')
-        .map((l) => ({ role: l.kind as 'user' | 'assistant', content: l.text }));
+        .filter((l): l is Extract<Line, { kind: 'user' | 'assistant' }> => l.kind === 'user' || l.kind === 'assistant')
+        .map((l) => ({ role: l.kind, content: l.text }));
       history.push({ role: 'user', content: trimmed });
 
       const res = await fetch('/api/chat', {
@@ -182,7 +197,8 @@ const Chat = () => {
     } catch {
       setLines((prev) => {
         const c = [...prev];
-        if (c.length && c[c.length - 1].kind === 'assistant' && !c[c.length - 1].text.trim()) {
+        const last = c[c.length - 1];
+        if (last && last.kind === 'assistant' && !last.text.trim()) {
           c[c.length - 1] = { kind: 'system', text: t('chatError') };
         } else {
           c.push({ kind: 'system', text: t('chatError') });
@@ -200,40 +216,64 @@ const Chat = () => {
     streaming && i === lines.length - 1 && lines[i].kind === 'assistant';
 
   return (
-    <div className="term" onClick={() => inputRef.current?.focus()}>
-      <div className="term-body" ref={bodyRef}>
-        {lines.map((l, i) => {
-          if (l.kind === 'user') {
-            return (
-              <div className="msg-row msg-row-user msg-in" key={i}>
-                <div className="msg-bubble msg-bubble-user">{l.text}</div>
-              </div>
-            );
-          }
-          if (l.kind === 'assistant') {
+    <div className="spot-col" onClick={() => inputRef.current?.focus()}>
+      <div className="spot-messages" ref={bodyRef}>
+        <div className="spot-messages-inner">
+          {lines.map((l, i) => {
+            if (l.kind === 'user') {
+              return (
+                <div className="msg-row msg-row-user msg-in" key={i}>
+                  <div className="msg-bubble msg-bubble-user">{l.text}</div>
+                </div>
+              );
+            }
+            if (l.kind === 'assistant') {
+              return (
+                <div className="msg-row msg-row-assistant msg-in" key={i}>
+                  <Anil />
+                  <div className="msg-bubble msg-bubble-assistant">
+                    {l.text}
+                    {lastIsStreamingAssistant(i) && <span className="cursor" />}
+                    {loading && !l.text && !streaming && (
+                      <span className="typing"><span /><span /><span /></span>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+            if (l.kind === 'timeline') {
+              return (
+                <div className="msg-row msg-row-assistant msg-in" key={i}>
+                  <Anil />
+                  <div className="msg-bubble msg-bubble-rich">
+                    <CareerTimeline language={language} />
+                  </div>
+                </div>
+              );
+            }
+            if (l.kind === 'project') {
+              const project = PROJECTS.find((p) => p.id === l.id);
+              if (!project) return null;
+              return (
+                <div className="msg-row msg-row-assistant msg-in" key={i}>
+                  <Anil />
+                  <div className="msg-bubble msg-bubble-rich">
+                    <ProjectCard project={project} language={language} />
+                  </div>
+                </div>
+              );
+            }
             return (
               <div className="msg-row msg-row-assistant msg-in" key={i}>
-                <Anil />
-                <div className="msg-bubble msg-bubble-assistant">
-                  {l.text}
-                  {lastIsStreamingAssistant(i) && <span className="cursor" />}
-                  {loading && !l.text && !streaming && (
-                    <span className="typing"><span /><span /><span /></span>
-                  )}
-                </div>
+                <div className="msg-bubble msg-bubble-system muted">{l.text}</div>
               </div>
             );
-          }
-          return (
-            <div className="msg-row msg-row-assistant msg-in" key={i}>
-              <div className="msg-bubble msg-bubble-system muted">{l.text}</div>
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
 
       <form
-        className="term-input-row"
+        className="spot-input-row"
         onSubmit={(e) => {
           e.preventDefault();
           send(input);
@@ -257,6 +297,8 @@ const Chat = () => {
           </svg>
         </button>
       </form>
+
+      <div className="spot-spacer" aria-hidden />
     </div>
   );
 };
