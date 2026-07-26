@@ -166,21 +166,28 @@ textarea { resize: none; }
   background: var(--accent-dim);
 }
 
-/* ---- spotlight layout ----
-   Three stacked regions inside a full-height column: a scrollable message
-   area, the input row, and an empty spacer. The message area and spacer share
-   equal flex-basis, which pins the input row at exactly 50% of the viewport
-   height no matter how long the conversation gets — overflow scrolls inside
-   the message region instead of pushing the input down. */
-.spot-main {
+/* ---- page layout ----
+   The document scrolls the CV overview; the chat dock sits stuck to the
+   bottom and only becomes a full-height column once it opens as an overlay. */
+.page {
   min-height: 100dvh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+  /* clears the docked input bar so the last overview section is never hidden behind it */
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 .spot-col {
   width: 100%;
   max-width: 44rem;
-  height: 100dvh;
+  /* flex child of .chat-panel alongside its handle — flex-grow to fill the
+     remaining space instead of height:100% (which ignored the handle and
+     pushed the input row off-screen) */
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 0 1rem;
@@ -204,15 +211,6 @@ textarea { resize: none; }
   gap: 0.9rem;
   padding: 3rem 0 1rem;
 }
-/* Keeps the input at ~50vh while the conversation is short. The huge shrink
-   factor makes this spacer collapse before anything else once content grows
-   (e.g. a tall timeline/project card renders), sliding the input down to the
-   bottom so the messages get the full viewport height. */
-.spot-spacer {
-  flex: 0 999 calc(50dvh - 1.5rem);
-  min-height: 0;
-}
-
 .spot-input-row {
   display: flex;
   align-items: center;
@@ -458,38 +456,170 @@ textarea { resize: none; }
   color: var(--muted);
 }
 
-.project-pipeline-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  margin-bottom: 0.3rem;
-}
-.project-pipeline ol {
-  margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.83rem;
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
 /* ---- responsive: full-bleed on mobile/tablet ---- */
 @media (max-width: 768px) {
   .spot-col {
     max-width: none;
     padding: 0 0.75rem;
   }
-  /* On small screens the input docks to the bottom like a normal chat app —
-     the 50vh spotlight centering is a desktop affordance. */
-  .spot-spacer { display: none; }
   .spot-input-row { margin-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
   /* ≥16px input font — anything smaller makes iOS Safari zoom in on focus. */
   .term-input { font-size: 16px; }
   .msg-bubble { max-width: 88%; }
   .msg-bubble-rich { max-width: 100%; }
   .timeline-head { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+  .page { padding: 0 0.75rem; padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  .chat-dock { margin-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+  .chat-panel { max-height: 92dvh; padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* ---- docked chat input / expanding bottom sheet ----
+   Closed: only the input row, stuck to the bottom of the document (sticky,
+   not fixed — participates in layout, avoids iOS fixed-element jitter) with a
+   backdrop + top fade so overview content scrolling under it stays legible.
+   Open: a card that expands up from the same spot, over a dimmed backdrop.
+   The overview page stays put underneath — collapsing the sheet (handle,
+   backdrop click, or Escape) is how the user returns to it. */
+.chat-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding-top: 1.5rem;
+  margin-top: auto;
+  background: linear-gradient(to bottom, transparent, var(--bg) 40%);
+}
+.chat-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+.chat-panel-backdrop.is-visible {
+  opacity: 1;
+}
+.chat-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+  max-height: min(85dvh, 42rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow);
+  /* transform is driven from JS (open/close slide + live drag offset); this
+     transition is what makes both the settle-in and the snap-back smooth —
+     it's turned off inline while the handle is actively being dragged. */
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+.chat-panel-handle {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 0.7rem 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  cursor: grab;
+  /* the handle owns vertical drag gestures — don't let touch scrolling steal them */
+  touch-action: none;
+}
+.chat-panel-handle:active {
+  cursor: grabbing;
+}
+.chat-panel-grip {
+  width: 2.4rem;
+  height: 0.3rem;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  transition: background 0.15s ease;
+}
+.chat-panel-handle:hover .chat-panel-grip,
+.chat-panel-handle:focus-visible .chat-panel-grip {
+  background: var(--accent);
+}
+
+/* ---- CV overview ---- */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 0 1rem;
+}
+.ov-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  animation: fadeInUp 0.32s ease both;
+}
+.ov-heading {
+  font-size: 1.05rem;
+}
+.ov-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.hero-top {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.hero-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.hero-heading {
+  min-width: 0;
+  /* override monospace.css's global h1 top margin — it would otherwise add
+     dead space above the name and throw off centering against the avatar */
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.hero-heading h1 { margin: 0; line-height: 1.15; }
+.hero-title { margin: 0; }
+.hero-location { font-size: 0.85rem; }
+.hero-tagline { margin: 0; }
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.hero-links .chip { gap: 0.4rem; }
+
+.skills-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.skills-group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
 }
 
 .cursor {
@@ -558,5 +688,6 @@ textarea { resize: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .msg-in, .cursor, .typing span { animation: none; }
+  .msg-in, .cursor, .typing span, .ov-section { animation: none; }
+  .chat-panel, .chat-panel-backdrop { transition: none; }
 }

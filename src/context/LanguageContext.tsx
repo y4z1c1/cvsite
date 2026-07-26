@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 type Language = 'en' | 'tr';
 
@@ -15,6 +15,13 @@ export const LanguageContext = createContext<LanguageContextType>({
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [language, setLanguage] = useState<Language>('en');
+
+    // <html lang> is hardcoded "en" in layout.tsx and never follows the
+    // in-chat language toggle — this keeps screen readers pronouncing the
+    // (now substantial) Turkish page copy correctly.
+    useEffect(() => {
+        document.documentElement.lang = language;
+    }, [language]);
 
     return (
         <LanguageContext.Provider value={{ language, setLanguage }}>

@@ -49,14 +49,6 @@ const ProjectCard = ({ project, language }: Props) => (
       })}
     </div>
 
-    <div className="project-pipeline">
-      <div className="project-pipeline-title">ci/cd</div>
-      <ol>
-        {project.deploySteps[language].map((s) => (
-          <li key={s}>{s}</li>
-        ))}
-      </ol>
-    </div>
   </div>
 );
 

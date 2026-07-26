@@ -22,16 +22,19 @@ const mono = JetBrains_Mono({
 const SITE_URL = 'https://yusufanilyazici.com';
 const OG_IMAGE = 'https://avatars.githubusercontent.com/u/56488393?v=4';
 
+const DESCRIPTION =
+  'yusuf anıl yazıcı — computer engineer. full-stack, blockchain & ML experience, projects, education, skills, and an AI chat that answers as me.';
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'yusuf anıl yazıcı',
-  description: 'yusuf anıl yazıcı — computer engineer. ask me anything.',
+  description: DESCRIPTION,
   icons: {
     icon: OG_IMAGE,
   },
   openGraph: {
     title: 'yusuf anıl yazıcı',
-    description: 'yusuf anıl yazıcı — computer engineer. ask me anything.',
+    description: DESCRIPTION,
     url: SITE_URL,
     siteName: 'yusuf anıl yazıcı',
     images: [OG_IMAGE],
@@ -40,8 +43,23 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary',
     title: 'yusuf anıl yazıcı',
-    description: 'yusuf anıl yazıcı — computer engineer. ask me anything.',
+    description: DESCRIPTION,
     images: [OG_IMAGE],
+  },
+};
+
+// Cheap, real SEO win now that the page has actual content worth marking up.
+const PERSON_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Yusuf Anıl Yazıcı',
+  jobTitle: 'Computer Engineer',
+  url: SITE_URL,
+  email: 'mailto:yusufanilyazici@gmail.com',
+  sameAs: ['https://github.com/y4z1c1', 'https://www.linkedin.com/in/y4z1c1/'],
+  alumniOf: {
+    '@type': 'CollegeOrUniversity',
+    name: 'Boğaziçi University',
   },
 };
 
@@ -64,6 +82,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <body>
+        {/* Plain <script>, not next/script — JSON-LD must be in the initial
+            server-rendered HTML for crawlers, not injected client-side. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(PERSON_JSON_LD) }}
+        />
         <Providers>{children}</Providers>
         {process.env.NEXT_PUBLIC_UMAMI_SRC && process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ? (
           <Script

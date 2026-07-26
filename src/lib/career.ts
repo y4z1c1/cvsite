@@ -3,17 +3,26 @@ import {
   DiPython, DiJava, DiReact, DiJavascript1, DiMongodb,
 } from 'react-icons/di';
 import {
-  SiTypescript, SiSolidity, SiDjango, SiMysql, SiSui, SiSpring, SiVuedotjs,
-  SiNodedotjs, SiNextdotjs, SiSupabase, SiDocker, SiGithubactions,
-  SiCloudflare, SiHetzner, SiTailwindcss,
+  SiTypescript, SiSolidity, SiDjango, SiMysql, SiSui, SiSpring, SiSpringboot,
+  SiVuedotjs, SiNodedotjs, SiNextdotjs, SiSupabase, SiDocker, SiGithubactions,
+  SiCloudflare, SiHetzner, SiTailwindcss, SiC, SiCplusplus, SiSharp,
+  SiUnity, SiHtml5, SiPostgresql,
 } from 'react-icons/si';
 import { FaBriefcase, FaGraduationCap, FaChartLine } from 'react-icons/fa';
+// react-icons has no Adobe icons in the `si` set — the tabler (`tb`) set does.
+// TbApi (not the literal fa/FaSoap bar-of-soap glyph) for SOAP web services.
+import {
+  TbBrandAdobePremier, TbBrandAdobeAfterEffect, TbBrandAdobePhotoshop, TbApi,
+} from 'react-icons/tb';
 
 export type TechId =
   | 'python' | 'java' | 'typescript' | 'javascript' | 'react' | 'vue'
-  | 'spring' | 'django' | 'solidity' | 'sui' | 'node' | 'mongodb' | 'mysql'
+  | 'spring' | 'spring-boot' | 'django' | 'solidity' | 'sui' | 'node'
+  | 'mongodb' | 'mysql' | 'postgresql' | 'soap'
   | 'nextjs' | 'supabase' | 'docker' | 'github-actions' | 'cloudflare'
-  | 'hetzner' | 'tailwind' | 'ml';
+  | 'hetzner' | 'tailwind' | 'ml'
+  | 'c' | 'cpp' | 'csharp' | 'unity' | 'html-css'
+  | 'premiere' | 'after-effects' | 'photoshop';
 
 export const TECH_ICONS: Record<TechId, { label: string; Icon: IconType }> = {
   python: { label: 'Python', Icon: DiPython },
@@ -23,12 +32,15 @@ export const TECH_ICONS: Record<TechId, { label: string; Icon: IconType }> = {
   react: { label: 'React', Icon: DiReact },
   vue: { label: 'Vue.js', Icon: SiVuedotjs },
   spring: { label: 'Java Spring', Icon: SiSpring },
+  'spring-boot': { label: 'Spring Boot', Icon: SiSpringboot },
   django: { label: 'Django', Icon: SiDjango },
   solidity: { label: 'Solidity', Icon: SiSolidity },
   sui: { label: 'Sui Move', Icon: SiSui },
   node: { label: 'Node.js', Icon: SiNodedotjs },
   mongodb: { label: 'MongoDB', Icon: DiMongodb },
   mysql: { label: 'MySQL', Icon: SiMysql },
+  postgresql: { label: 'PostgreSQL', Icon: SiPostgresql },
+  soap: { label: 'SOAP Web Services', Icon: TbApi },
   nextjs: { label: 'Next.js', Icon: SiNextdotjs },
   supabase: { label: 'Supabase', Icon: SiSupabase },
   docker: { label: 'Docker', Icon: SiDocker },
@@ -37,9 +49,52 @@ export const TECH_ICONS: Record<TechId, { label: string; Icon: IconType }> = {
   hetzner: { label: 'Hetzner', Icon: SiHetzner },
   tailwind: { label: 'Tailwind CSS', Icon: SiTailwindcss },
   ml: { label: 'Machine Learning', Icon: FaChartLine },
+  c: { label: 'C', Icon: SiC },
+  cpp: { label: 'C++', Icon: SiCplusplus },
+  csharp: { label: 'C#', Icon: SiSharp },
+  unity: { label: 'Unity', Icon: SiUnity },
+  'html-css': { label: 'HTML/CSS', Icon: SiHtml5 },
+  premiere: { label: 'Adobe Premiere Pro', Icon: TbBrandAdobePremier },
+  'after-effects': { label: 'Adobe After Effects', Icon: TbBrandAdobeAfterEffect },
+  photoshop: { label: 'Adobe Photoshop', Icon: TbBrandAdobePhotoshop },
 };
 
 export { FaBriefcase, FaGraduationCap };
+
+// Single source of truth for the skills section — grouped for display, but
+// still keying off TECH_ICONS so labels/icons never drift.
+export const SKILL_GROUPS: { id: string; label: { en: string; tr: string }; items: TechId[] }[] = [
+  {
+    id: 'languages',
+    label: { en: 'Languages', tr: 'Diller' },
+    items: ['python', 'java', 'c', 'cpp', 'csharp', 'typescript', 'javascript'],
+  },
+  {
+    id: 'frontend',
+    label: { en: 'Frontend', tr: 'Frontend' },
+    items: ['react', 'vue', 'nextjs', 'tailwind', 'html-css'],
+  },
+  {
+    id: 'backend',
+    label: { en: 'Backend & Data', tr: 'Backend & Veri' },
+    items: ['node', 'spring', 'spring-boot', 'django', 'mysql', 'postgresql', 'mongodb', 'supabase', 'soap'],
+  },
+  {
+    id: 'blockchain',
+    label: { en: 'Blockchain', tr: 'Blockchain' },
+    items: ['solidity', 'sui'],
+  },
+  {
+    id: 'infra',
+    label: { en: 'Infra & DevOps', tr: 'Altyapı & DevOps' },
+    items: ['docker', 'github-actions', 'cloudflare', 'hetzner'],
+  },
+  {
+    id: 'other',
+    label: { en: 'Other', tr: 'Diğer' },
+    items: ['unity', 'ml', 'premiere', 'after-effects', 'photoshop'],
+  },
+];
 
 export type Experience = {
   id: string;
@@ -61,7 +116,7 @@ export const EXPERIENCES: Experience[] = [
     date: { en: 'Oct 2025 – Present', tr: 'Ekim 2025 – Günümüz' },
     logoId: 'turkish-technology',
     kind: 'work',
-    tech: ['java', 'spring', 'vue'],
+    tech: ['java', 'spring', 'spring-boot', 'vue', 'postgresql', 'soap'],
     bullets: {
       en: [
         'Full-stack web apps with Java Spring + Vue.js',
@@ -145,6 +200,19 @@ export const EXPERIENCES: Experience[] = [
     bullets: {
       en: ['Graduated June 2026'],
       tr: ['Haziran 2026 mezunu'],
+    },
+  },
+  {
+    id: 'sakarya-fen',
+    company: 'Sakarya Cevat Ayhan Science High School',
+    role: { en: 'High School Diploma', tr: 'Lise Diploması' },
+    date: { en: 'Sep 2017 – Jun 2021', tr: 'Eylül 2017 – Haziran 2021' },
+    logoId: 'sakarya-fen',
+    kind: 'education',
+    tech: [],
+    bullets: {
+      en: ['Graduated June 2021'],
+      tr: ['Haziran 2021 mezunu'],
     },
   },
 ];

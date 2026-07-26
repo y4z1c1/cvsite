@@ -2,11 +2,11 @@
 import { EXPERIENCES, TECH_ICONS } from '../lib/career';
 import CompanyLogo from './CompanyLogo';
 
-type Props = { language: 'en' | 'tr' };
+type Props = { language: 'en' | 'tr'; kinds?: ('work' | 'education')[] };
 
-const CareerTimeline = ({ language }: Props) => (
+const CareerTimeline = ({ language, kinds = ['work', 'education'] }: Props) => (
   <div className="timeline">
-    {EXPERIENCES.map((exp) => (
+    {EXPERIENCES.filter((exp) => kinds.includes(exp.kind)).map((exp) => (
       <div className="timeline-item" key={exp.id}>
         <div className="timeline-rail">
           <CompanyLogo logoId={exp.logoId} alt={exp.company} kind={exp.kind} size={40} />

@@ -10,7 +10,6 @@ export type Project = {
   tech: TechId[];
   /** Live platform numbers; formatted per-locale at render time. */
   stats: { value: number; label: { en: string; tr: string } }[];
-  deploySteps: { en: string[]; tr: string[] };
   links: { label: string; url: string }[];
 };
 
@@ -37,22 +36,6 @@ export const PROJECTS: Project[] = [
       { value: 1812, label: { en: 'club reviews', tr: 'kulüp yorumu' } },
       { value: 34997, label: { en: 'forum posts', tr: 'forum gönderisi' } },
     ],
-    deploySteps: {
-      en: [
-        'push to main → GitHub Actions builds a standalone Next.js Docker image',
-        'image pushed to GHCR (never built on the server)',
-        'Coolify webhook pulls & rolling-deploys on a Hetzner box',
-        'Traefik terminates TLS, Cloudflare proxies DNS',
-        'Umami self-hosted on the same box for analytics',
-      ],
-      tr: [
-        'main\'e push → GitHub Actions standalone Next.js Docker imajı derler',
-        'imaj GHCR\'a gönderilir (sunucuda asla build alınmaz)',
-        'Coolify webhook\'u Hetzner sunucusunda rolling deploy başlatır',
-        'TLS Traefik\'te sonlanır, DNS Cloudflare proxy\'sinden geçer',
-        'Analitik için aynı sunucuda self-hosted Umami',
-      ],
-    },
     links: [{ label: 'bogazicicim.com', url: 'https://bogazicicim.com' }],
   },
   {
@@ -69,22 +52,6 @@ export const PROJECTS: Project[] = [
     logoId: 'cvsite',
     tech: ['nextjs', 'typescript', 'docker', 'github-actions', 'cloudflare', 'hetzner'],
     stats: [],
-    deploySteps: {
-      en: [
-        'push to main → GitHub Actions builds a standalone Next.js Docker image',
-        'image pushed to GHCR (never built on the server)',
-        'Coolify webhook pulls & rolling-deploys on a Hetzner box',
-        'Traefik terminates TLS, Cloudflare proxies DNS',
-        'chat streams from fal.ai through an /api/chat route',
-      ],
-      tr: [
-        'main\'e push → GitHub Actions standalone Next.js Docker imajı derler',
-        'imaj GHCR\'a gönderilir (sunucuda asla build alınmaz)',
-        'Coolify webhook\'u Hetzner sunucusunda rolling deploy başlatır',
-        'TLS Traefik\'te sonlanır, DNS Cloudflare proxy\'sinden geçer',
-        'sohbet /api/chat üzerinden fal.ai\'den akar',
-      ],
-    },
     links: [{ label: 'github.com/y4z1c1/cvsite', url: 'https://github.com/y4z1c1/cvsite' }],
   },
 ];
