@@ -7,6 +7,7 @@ import Hero from './Hero';
 import CareerTimeline from './CareerTimeline';
 import ProjectCard from './ProjectCard';
 import SkillsGrid from './SkillsGrid';
+import MessageForm from './MessageForm';
 
 const Overview = () => {
   const { language } = useContext(LanguageContext);
@@ -45,6 +46,13 @@ const Overview = () => {
         <h2 className="ov-heading">{t('skills')}</h2>
         <div className="ov-card">
           <SkillsGrid language={language} />
+        </div>
+      </section>
+
+      <section className="ov-section" id="message">
+        <h2 className="ov-heading">{t('messageHeading')}</h2>
+        <div className="ov-card">
+          <MessageForm variant="section" />
         </div>
       </section>
     </div>

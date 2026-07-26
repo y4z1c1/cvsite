@@ -5,6 +5,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import { useTranslation } from '../hooks/useTranslation';
 import CareerTimeline from './CareerTimeline';
 import ProjectCard from './ProjectCard';
+import MessageForm from './MessageForm';
 import { PROJECTS } from '../lib/projects';
 import { LINKS } from '../lib/links';
 
@@ -13,7 +14,8 @@ type Line =
   | { kind: 'user'; text: string }
   | { kind: 'assistant'; text: string }
   | { kind: 'timeline' }
-  | { kind: 'project'; id: string };
+  | { kind: 'project'; id: string }
+  | { kind: 'message' };
 
 type Props = { open: boolean; onOpen: () => void; onClose: () => void };
 
@@ -46,6 +48,7 @@ const TURKISH_RE = /\b(türkçe|turkish)\b/i;
 const ENGLISH_RE = /\b(english|ingilizce)\b/i;
 const CAREER_RE = /\b(experience|career|work history|your work|jobs?|deneyim(ler(in)?)?|kariyer(in)?|iş geçmişi|işler(in)?|çalışmaların|riskoptima|turkish technology|suicity)\b/i;
 const PROJECTS_RE = /\b(projects?|projeler(in)?|proje|bo[gğ]azi[cç]i ?[cç]im|bogazicicim)\b/i;
+const MESSAGE_RE = /\b(leave\s+(you\s+)?(a\s+)?message|get in touch|contact you|reach (out|you)|send you a message|mesaj b[ıi]rak\w*|ile[tş]im\w*|sana ulaş\w*)\b/i;
 
 // The LLM can request UI actions by ending its reply with [[show:...]] or
 // [[set:...]] tokens (see persona.ts "UI actions"). Markers are stripped from
@@ -227,13 +230,17 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
       print({ kind: 'project', id: 'bogazicicim' });
       return true;
     }
+    if (MESSAGE_RE.test(trCmd)) {
+      print({ kind: 'message' });
+      return true;
+    }
 
     switch (cmd) {
       case 'help':
         print({
           kind: 'system',
           text:
-            'commands: help · about · skills · experience · projects · cv · github · linkedin · email · clear\nor just ask me anything in plain english / türkçe.',
+            'commands: help · about · skills · experience · projects · message · cv · github · linkedin · email · clear\nor just ask me anything in plain english / türkçe.',
         });
         return true;
       case 'about':
@@ -244,6 +251,10 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
         return true;
       case 'skills':
         print({ kind: 'system', text: 'python · java · typescript · react · move · solidity · django' });
+        return true;
+      case 'message':
+      case 'contact':
+        print({ kind: 'message' });
         return true;
       case 'clear':
         setLines([{ kind: 'assistant', text: t('chatIntro') }]);
@@ -319,9 +330,11 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
         // show: append the card after the text bubble.
         const card: Line | null = arg === 'timeline'
           ? { kind: 'timeline' }
-          : arg.startsWith('project:') && PROJECTS.some((p) => p.id === arg.slice(8))
-            ? { kind: 'project', id: arg.slice(8) }
-            : null;
+          : arg === 'message'
+            ? { kind: 'message' }
+            : arg.startsWith('project:') && PROJECTS.some((p) => p.id === arg.slice(8))
+              ? { kind: 'project', id: arg.slice(8) }
+              : null;
         if (card) {
           setLines((prev) => {
             const c = [...prev];
@@ -447,6 +460,19 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
                     <Anil />
                     <div className="msg-bubble msg-bubble-rich">
                       <ProjectCard project={project} language={language} />
+                    </div>
+                  </div>
+                );
+              }
+              if (l.kind === 'message') {
+                return (
+                  <div className="msg-row msg-row-assistant msg-in" key={i}>
+                    <Anil />
+                    <div className="msg-bubble msg-bubble-rich">
+                      <MessageForm
+                        variant="inline"
+                        onSuccess={() => print({ kind: 'system', text: t('messageSentInChat') })}
+                      />
                     </div>
                   </div>
                 );

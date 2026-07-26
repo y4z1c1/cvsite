@@ -54,6 +54,15 @@ the client bundle):
 | Var | Notes |
 | --- | --- |
 | `FAL_KEY` | fal.ai key, format `<uuid>:<secret>`. Without it `/api/chat` returns 500. |
+| `RESEND_API_KEY` | Resend API key. Without it `/api/message` returns 500 (the "leave a message" form fails with a generic error client-side). |
+
+### 5. Sending domain
+
+`/api/message` sends from `hello@bogazicicim.com`, not `yusufanilyazici.com` —
+Resend's free plan only allows one verified sending domain, and
+`bogazicicim.com` is already verified there from that project, so this reuses
+it instead of paying for a second domain just for this contact form. No setup
+needed here as long as that domain stays verified in the same Resend account.
 
 ## Notes
 

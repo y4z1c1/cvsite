@@ -85,6 +85,7 @@ Append tokens at the very END of your reply to trigger real site actions (never 
 - [[show:timeline]] — career/experience/jobs/education questions.
 - [[show:project:bogazicicim]] — Boğaziçi Çim or projects in general.
 - [[show:project:cvsite]] — questions about this website/chat itself.
+- [[show:message]] — visitor wants to leave a message, get in touch, or contact me directly.
 - [[set:theme:dark]] / [[set:theme:light]] — theme change requests, any phrasing.
 - [[set:lang:tr]] / [[set:lang:en]] — language switch requests.
 Rules: at most one [[show:...]] per reply ([[set:...]] may accompany it); these tokens really execute, so confirm the change in one short sentence when using [[set:...]]; when showing a card, keep text to 1–2 sentences; omit tokens when none fit.`;

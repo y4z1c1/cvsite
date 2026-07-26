@@ -1,5 +1,6 @@
 import { fal } from '@fal-ai/client';
 import { buildSystemPrompt } from '@/lib/persona';
+import { createRateLimiter, clientIp } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,35 +14,11 @@ const MODEL = 'google/gemini-flash-1.5';
 const MAX_MESSAGES = 12;
 const MAX_CHARS_PER_MESSAGE = 2000;
 const MAX_CHARS_TOTAL = 8000;
-const RATE_LIMIT = 12; // requests per window, per IP
 const RATE_WINDOW_MS = 60_000;
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
-// In-memory fixed-window counter. Good enough for a personal site; on a
-// multi-instance deploy each instance keeps its own window, so the effective
-// limit is RATE_LIMIT × instances. Swap for Redis/Upstash if that matters.
-const hits = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = hits.get(ip);
-  if (!entry || now >= entry.resetAt) {
-    hits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    if (hits.size > 5000) {
-      for (const [k, v] of hits) if (now >= v.resetAt) hits.delete(k);
-    }
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > RATE_LIMIT;
-}
-
-function clientIp(req: Request): string {
-  const fwd = req.headers.get('x-forwarded-for');
-  if (fwd) return fwd.split(',')[0].trim();
-  return req.headers.get('x-real-ip') ?? 'unknown';
-}
+const rateLimited = createRateLimiter({ limit: 12, windowMs: RATE_WINDOW_MS });
 
 // Keep only the tail of the conversation and clamp each message, so a crafted
 // client cannot push an arbitrarily large prompt through the key.
