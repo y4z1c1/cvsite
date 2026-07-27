@@ -580,6 +580,11 @@ textarea { resize: none; }
   animation: fadeInUp 0.32s ease both;
 }
 .ov-heading {
+  /* monospace.css's h1-h6 rule sets a heavy default margin (top: 2 line-heights,
+     bottom: 1) — inside a flex column that margin doesn't collapse away, it just
+     adds silent extra space on top of .ov-section's own gap. Zero it and let
+     the flex gap be the only source of spacing. */
+  margin: 0;
   font-size: 1.05rem;
 }
 .ov-card {
