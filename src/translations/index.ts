@@ -6,10 +6,10 @@ export const translations = {
     location: "Sariyer, Istanbul",
     currentEducation: "Boğaziçi University, Computer Engineering",
     previousEducation: "Sakarya Cevat Ayhan Science High School",
-    turkishTechRole: "Part-Time Full-Stack Developer, Turkish Technology",
+    turkishTechRole: "Junior Associate Software Developer, Turkish Technology",
     turkishTechDate: " (Oct 2025 - Present)",
     turkishTechDescription:
-      "Developing full-stack web applications using Java Spring for backend and Vue.js for frontend. Contributing to enterprise-level software solutions with high code quality standards. Collaborating with cross-functional teams to deliver scalable software solutions.",
+      "Developing full-stack web applications using Java Spring for backend and Vue.js for frontend. Contributing to enterprise-level software solutions with high code quality standards. Collaborating with cross-functional teams to deliver scalable software solutions. Promoted from part-time to full-time Junior Associate Software Developer, effective August 2026.",
     riskOptimaRole: "Software Developer, RiskOptima WealthTech Corp.",
     riskOptimaDate: " (Jul 2025 - Oct 2025)",
     riskOptimaDescription:
@@ -57,6 +57,11 @@ export const translations = {
     messageRateLimited: "You've sent a few messages already — please wait a bit before sending another.",
     messageInvalidEmail: "That email address doesn't look right.",
     messageTryAgain: "Try again",
+    copyForAI: "Copy for AI",
+    copiedForAI: "Copied!",
+    recap: "Recap",
+    recapTitle: "Everything, at a glance",
+    recapIntro: "A quick recap of everything above — click any card to jump back, or say hello below.",
   },
   tr: {
     education: "Eğitim",
@@ -65,10 +70,10 @@ export const translations = {
     location: "Sarıyer, İstanbul",
     currentEducation: "Boğaziçi Üniversitesi, Bilgisayar Mühendisliği",
     previousEducation: "Sakarya Cevat Ayhan Fen Lisesi",
-    turkishTechRole: "Yarı Zamanlı Full-Stack Geliştirici, Turkish Technology",
+    turkishTechRole: "Junior Associate Yazılım Geliştirici, Turkish Technology",
     turkishTechDate: " (Ekim 2025 - Günümüz)",
     turkishTechDescription:
-      "Backend için Java Spring ve frontend için Vue.js kullanarak full-stack web uygulamaları geliştiriyorum. Yüksek kod kalitesi standartlarıyla kurumsal düzeyde yazılım çözümlerine katkıda bulunuyorum. Ölçeklenebilir yazılım çözümleri sunmak için çapraz fonksiyonel ekiplerle işbirliği yapıyorum.",
+      "Backend için Java Spring ve frontend için Vue.js kullanarak full-stack web uygulamaları geliştiriyorum. Yüksek kod kalitesi standartlarıyla kurumsal düzeyde yazılım çözümlerine katkıda bulunuyorum. Ölçeklenebilir yazılım çözümleri sunmak için çapraz fonksiyonel ekiplerle işbirliği yapıyorum. Ağustos 2026 itibarıyla yarı zamanlıdan tam zamanlı Junior Associate Yazılım Geliştirici pozisyonuna terfi ettim.",
     riskOptimaRole: "Yazılım Geliştirici, RiskOptima WealthTech Corp.",
     riskOptimaDate: " (Temmuz 2025 - Ekim 2025)",
     riskOptimaDescription:
@@ -116,5 +121,10 @@ export const translations = {
     messageRateLimited: "Kısa sürede birkaç mesaj gönderdiniz — lütfen biraz bekleyip tekrar deneyin.",
     messageInvalidEmail: "Bu e-posta adresi doğru görünmüyor.",
     messageTryAgain: "Tekrar dene",
+    copyForAI: "AI için kopyala",
+    copiedForAI: "Kopyalandı!",
+    recap: "Özet",
+    recapTitle: "Her şey tek bakışta",
+    recapIntro: "Yukarıdakilerin hızlı bir özeti — herhangi bir karta tıkla, ya da aşağıdan merhaba de.",
   },
 };

@@ -22,7 +22,7 @@ type Props = { open: boolean; onOpen: () => void; onClose: () => void };
 const Anil = () => (
   // eslint-disable-next-line @next/next/no-img-element
   <img
-    src="/pp.png"
+    src="/avatar/pp-c-sm.webp"
     alt="anıl"
     width={30}
     height={30}
@@ -380,6 +380,9 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
         className="term-input"
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        onFocus={() => {
+          if (!open) onOpen();
+        }}
         placeholder={t('askAnything')}
         aria-label={t('askAnything')}
         spellCheck={false}
@@ -402,8 +405,11 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
     <>
       <div className={`chat-panel-backdrop${open ? ' is-visible' : ''}`} onClick={onClose} aria-hidden />
       <div
-        className="chat-panel"
-        style={{ transform: `translateY(${offset})`, transition: dragging ? 'none' : undefined }}
+        className={`chat-panel${offset === '0' ? ' is-open' : ''}`}
+        style={{
+          transform: `translateY(${offset}) scale(${offset === '0' ? 1 : 0.96})`,
+          transition: dragging ? 'none' : undefined,
+        }}
       >
         <button
           type="button"

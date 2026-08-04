@@ -1,0 +1,22 @@
+/* Tailwind v4, CSS-first config — theme + utilities only, deliberately
+   WITHOUT preflight (the base-tag reset). This project already has a full
+   hand-built design system (monospace.css → theme.css → stages.css); pulling
+   in Tailwind's reset would fight it (margins, borders, form element
+   styling, etc. would all get re-zeroed). Tailwind here exists only to power
+   the shadcn-sourced background components (Aurora, Mesh Gradient), which
+   use utility classes + arbitrary values internally. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --animate-aurora: aurora 60s linear infinite;
+}
+
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}

@@ -96,24 +96,35 @@ export const SKILL_GROUPS: { id: string; label: { en: string; tr: string }; item
   },
 ];
 
-export type Experience = {
+// A single stint at a company — used both as the top-level (current/most
+// recent) role on an Experience and, when a company has multiple stints
+// (promotion, intern-to-hire), as an entry in `previousPositions` — mirrors
+// how LinkedIn nests grouped positions under one company card.
+export type Position = {
+  role: { en: string; tr: string };
+  employmentType?: { en: string; tr: string };
+  date: { en: string; tr: string };
+  bullets: { en: string[]; tr: string[] };
+};
+
+export type Experience = Position & {
   id: string;
   company: string;
-  role: { en: string; tr: string };
-  date: { en: string; tr: string };
   /** Filename stem looked up as /logos/{logoId}.png; falls back to a generic icon. */
   logoId: string;
   kind: 'work' | 'education';
   tech: TechId[];
-  bullets: { en: string[]; tr: string[] };
+  /** Earlier stints at the same company, newest first — rendered nested beneath the current role. */
+  previousPositions?: Position[];
 };
 
 export const EXPERIENCES: Experience[] = [
   {
     id: 'turkish-tech',
     company: 'Turkish Technology',
-    role: { en: 'Part-Time Full-Stack Developer', tr: 'Yarı Zamanlı Full-Stack Geliştirici' },
-    date: { en: 'Oct 2025 – Present', tr: 'Ekim 2025 – Günümüz' },
+    role: { en: 'Junior Associate Software Developer', tr: 'Junior Associate Yazılım Geliştirici' },
+    employmentType: { en: 'Full-time', tr: 'Tam zamanlı' },
+    date: { en: 'Aug 2026 – Present', tr: 'Ağu 2026 – Günümüz' },
     logoId: 'turkish-technology',
     kind: 'work',
     tech: ['java', 'spring', 'spring-boot', 'vue', 'postgresql', 'soap'],
@@ -127,6 +138,23 @@ export const EXPERIENCES: Experience[] = [
         'Yüksek kod kalitesiyle kurumsal yazılım çözümleri',
       ],
     },
+    previousPositions: [
+      {
+        role: { en: 'Part-Time Full-Stack Developer', tr: 'Yarı Zamanlı Full-Stack Geliştirici' },
+        employmentType: { en: 'Part-time', tr: 'Yarı zamanlı' },
+        date: { en: 'Oct 2025 – Aug 2026', tr: 'Ekim 2025 – Ağu 2026' },
+        bullets: {
+          en: [
+            'Full-stack web apps with Java Spring + Vue.js, part-time alongside university',
+            'Promoted to full-time Junior Associate Software Developer in Aug 2026',
+          ],
+          tr: [
+            'Üniversite yanında yarı zamanlı, Java Spring + Vue.js ile full-stack web uygulamaları',
+            'Ağustos 2026\'da tam zamanlı Junior Associate Yazılım Geliştirici pozisyonuna terfi',
+          ],
+        },
+      },
+    ],
   },
   {
     id: 'riskoptima',

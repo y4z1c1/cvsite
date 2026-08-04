@@ -1,0 +1,678 @@
+/* ============================================================
+   Stages — cinematic full-viewport scroll chapters
+   ============================================================
+   Loaded last (after theme.css) in layout.tsx. Owns: the snap container,
+   the Stage reveal states, glass surfaces, the mesh/grain background,
+   per-stage hue identity, the dot-nav, display typography, and the
+   stage-scoped skins for components shared with Chat.tsx (never edit those
+   components directly — everything here is scoped under .stage so chat
+   bubble rendering is provably unaffected). */
+
+/* ---- snap container ----
+   The snap point lives on <html> itself — NOT a nested scroller — because
+   Chat.tsx locks scrolling via `document.body.style.overflow = 'hidden'`,
+   which only works while body's overflow propagates to the viewport. Never
+   set `overflow` on html; that propagation is what the chat sheet depends on. */
+html {
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+/* proximity (not mandatory) because stage heights vary — a 1-line education
+   stage vs. a 3-bullet job stage — and mandatory snapping against a stage
+   taller than the viewport can strand content unreachable. Opt into the
+   stronger mandatory snap only where every stage demonstrably fits. */
+@media (min-width: 900px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
+  html { scroll-snap-type: y mandatory; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-snap-type: none; scroll-behavior: auto; }
+}
+
+/* ---- background layers ----
+   Fixed, sit outside .stages, and are the ONLY elements allowed to combine
+   filter + transform/animation near the fixed chat pill's ancestry — they
+   have no fixed descendants of their own so it's safe here. */
+
+/* AuroraBackground (src/components/ui/aurora-background.tsx) is the only
+   decorative background layer besides .grain — see page.tsx. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--grain-alpha);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* ---- glass surface (reusable) ---- */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--glass-ring), var(--glass-shadow);
+}
+
+/* ---- stage shell ---- */
+.stages {
+  position: relative;
+}
+.stage {
+  position: relative;
+  min-height: 100dvh; /* never fixed height — a stage that overflows just scrolls, it never clips */
+  scroll-snap-align: start;
+  scroll-snap-stop: normal; /* never "always" — a single Tab/keyboard scroll must be able to pass through */
+  display: grid;
+  place-items: center;
+  padding: max(6rem, 12vh) 1.25rem 8.5rem; /* bottom clears the fixed chat pill */
+}
+/* per-stage identity glow, keyed off data-hue */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(60vmax 45vmax at 50% 40%, var(--stage-hue, var(--hue-lime)), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.stage.is-in::before { opacity: 0.16; }
+.stage[data-hue="lime"]   { --stage-hue: var(--hue-lime); }
+.stage[data-hue="violet"] { --stage-hue: var(--hue-violet); }
+.stage[data-hue="cyan"]   { --stage-hue: var(--hue-cyan); }
+.stage[data-hue="amber"]  { --stage-hue: var(--hue-amber); }
+.stage[data-hue="rose"]   { --stage-hue: var(--hue-rose); }
+
+/* focus targets land inside the active band, not flush at the viewport edge */
+.stage a, .stage button, .stage input, .stage textarea {
+  scroll-margin-block: 22vh;
+}
+
+/* .stage-vel carries ONLY the scroll-velocity blur (useScrollVelocity.ts);
+   .stage-inner carries ONLY the reveal transition. Kept as two separate
+   elements so both can animate `filter` independently without needing
+   @property-registered custom properties for interpolation. */
+.stage-vel {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  filter: none;
+}
+.stages-js .stage.is-in .stage-vel {
+  filter: blur(calc(var(--vblur, 0px) * var(--vblur-scale, 1)));
+}
+@media (pointer: coarse) {
+  :root { --vblur-scale: 0.5; }
+}
+
+.stage-inner {
+  width: 100%;
+  max-width: 44rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+    filter 0.55s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.stage-inner.is-wide { max-width: 68rem; }
+/* Default (no JS / no IO / IO hasn't run yet): fully visible. Only once
+   .stages-js is set does anything hide — this is what keeps the page usable
+   with JS off or IntersectionObserver unsupported. */
+.stages-js .stage:not(.is-in) .stage-inner { opacity: 0; }
+.stages-js .stage.is-ahead .stage-inner {
+  filter: blur(14px);
+  transform: translateY(7vh) scale(0.965);
+}
+.stages-js .stage.is-behind .stage-inner {
+  filter: blur(22px);
+  transform: translateY(-4vh) scale(1.07);
+}
+.stages-js .stage.is-in .stage-inner {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+}
+/* stagger direct children in on entry */
+.stages-js .stage.is-in .stage-inner > * {
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-inner, .stage::before { transition: none; }
+  .stage-vel { filter: none !important; }
+  .stages-js .stage:not(.is-in) .stage-inner,
+  .stages-js .stage.is-ahead .stage-inner,
+  .stages-js .stage.is-behind .stage-inner {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+/* ---- typography ---- */
+.stage .stage-title,
+.stage .hero-name,
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  margin: 0;
+}
+.stage .hero-name { font-size: clamp(2.75rem, 11vw, 7.5rem); }
+.stage .stage-title { font-size: clamp(2rem, 6vw, 4.25rem); }
+.stage .exp-role {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.6rem, 4.2vw, 3rem);
+  line-height: 1.05;
+  margin: 0;
+}
+.stage .hero-tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  color: var(--muted);
+  margin: 0;
+}
+.stage-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+[data-theme="dark"] .stage-kicker { color: var(--accent); }
+.stage p, .stage li {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  line-height: 1.55;
+}
+
+/* ---- stage-scoped skins for components shared with Chat.tsx ----
+   CareerTimeline / ProjectCard / MessageForm / SkillsGrid are never edited
+   directly — chat bubbles render the exact same components unscoped, so
+   every override here is prefixed .stage to guarantee it can't leak. */
+.stage .ov-card,
+.stage .stage-card {
+  padding: var(--space-4);
+}
+.stage .exp-card,
+.stage .stage-card,
+.stage .project-card-wrap {
+  width: 100%;
+}
+
+.stage .project-card { gap: var(--space-3); }
+.stage .project-name { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.4rem, 3vw, 2rem); }
+.stage .project-desc { font-size: clamp(0.95rem, 1.6vw, 1.05rem); }
+.stage .project-stats {
+  border-style: solid;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+}
+@media (min-width: 640px) {
+  .stage .project-stats { grid-template-columns: repeat(4, 1fr); }
+}
+
+.stage .tech-chip {
+  font-size: 0.76rem;
+  padding: 0.32rem 0.6rem;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+.stage .skills-groups {
+  gap: var(--space-4);
+}
+@media (min-width: 860px) {
+  .stage .skills-groups {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4) var(--space-3);
+  }
+}
+
+.stage .message-form { gap: var(--space-3); }
+.stage .mf-input, .stage .mf-textarea {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+/* ---- generic glass card used by hero chips + stage content wrappers ---- */
+.stage .glass-card {
+  padding: var(--space-4);
+}
+/* the copy-for-AI hero chip pops lime + a quick scale on success, echoing
+   the send button's accent instead of introducing a new color */
+.hero-links .chip[data-copied="true"] {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: transparent;
+  animation: mfPop 0.3s ease both;
+}
+
+/* ---- recap stage: Apple-keynote-style summary grid ---- */
+.recap-intro {
+  color: var(--muted);
+  max-width: 40rem;
+}
+.recap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-3);
+}
+.recap-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: var(--space-3);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.recap-card:hover, .recap-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: var(--glass-ring), 0 16px 32px rgba(0, 0, 0, 0.18);
+}
+.recap-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+[data-theme="light"] .recap-card-icon,
+:root:not([data-theme="dark"]) .recap-card-icon { color: #7a9c1e; }
+.recap-card-title {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.recap-card-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.recap-card-skills {
+  display: flex;
+  gap: 0.4rem;
+  color: var(--accent);
+}
+.recap-card-message {
+  grid-column: 1 / -1;
+  cursor: default;
+  align-items: stretch;
+}
+.recap-card-message .message-form { margin-top: 0.2rem; }
+@media (min-width: 640px) {
+  .recap-card-message { grid-column: span 2; }
+}
+
+/* ---- experience stage ---- */
+.exp-stage-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.exp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.7rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.exp-date {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.6rem;
+  white-space: nowrap;
+}
+.exp-bullets {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+}
+.exp-employment-type {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* ---- earlier stints at the same company, nested below the current role —
+   LinkedIn-style grouped positions instead of a flattened "started as..."
+   bullet. ---- */
+.exp-prev-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.exp-prev {
+  display: flex;
+  gap: 0.8rem;
+}
+.exp-prev-rail {
+  flex: 0 0 auto;
+  width: 2px;
+  margin-left: 1.75rem;
+  background: var(--border);
+  border-radius: 1px;
+}
+.exp-prev-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.exp-prev-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+}
+.exp-prev-role {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  color: var(--muted);
+}
+.exp-prev-bullets {
+  font-size: clamp(0.85rem, 1.3vw, 0.95rem);
+  color: var(--muted);
+}
+
+/* ---- hero stage ---- */
+.hero-stage-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.hero-avatar-lg {
+  width: clamp(72px, 12vw, 128px);
+  height: clamp(72px, 12vw, 128px);
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+.hero-avatar-ring {
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  padding: 3px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-ring);
+}
+
+/* ---- cursor-tracking avatar (AvatarTracker.tsx) ----
+   All 13 head-turn frames are stacked here and crossfaded by opacity. On top of
+   the discrete frame swap sits a small continuous 3D tilt driven by --ax/--ay
+   (written every frame by useCursorDirection) — that's what blends the steps
+   between frames into something that reads as one smooth motion.
+
+   `perspective()` is used as a transform function rather than the `perspective`
+   property because the property applies to an element's *children*, and it's
+   this element itself that rotates.
+
+   Containing-block note: `transform` makes an element the containing block for
+   any position:fixed descendant. This one has none — the fixed chat pill and
+   stage nav are siblings of .stages, not descendants — so it's safe here. */
+.avatar-stack {
+  position: relative;
+  display: block;
+  width: clamp(72px, 12vw, 128px);
+  height: clamp(72px, 12vw, 128px);
+  flex: 0 0 auto;
+  border-radius: 50%;
+  transform: perspective(600px)
+    rotateY(calc(var(--ax, 0) * 7deg))
+    rotateX(calc(var(--ay, 0) * -5deg));
+  transition: transform 0.18s ease-out;
+}
+/* Frames swap instantly — no opacity crossfade. Each frame was generated with
+   its own framing, so fading between them ghosts two heads at slightly
+   different positions; a hard cut reads as a head snapping to look at you. */
+.avatar-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.avatar-frame.is-active { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-stack { transform: none; transition: none; }
+}
+.hero-scroll-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: var(--space-4);
+}
+.hero-scroll-hint svg { animation: bob 1.8s ease-in-out infinite; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-hint svg { animation: none; }
+}
+
+/* ---- dot-nav ---- */
+.stage-nav {
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.65rem 0.5rem;
+}
+.stage-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.stage-nav-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.stage-nav-btn[aria-current="true"] .stage-nav-dot {
+  background: var(--accent);
+  transform: scale(1.6);
+}
+.stage-nav-btn:hover .stage-nav-dot,
+.stage-nav-btn:focus-visible .stage-nav-dot {
+  background: var(--accent);
+}
+.stage-nav-progress { display: none; } /* desktop uses the dot rail instead */
+
+/* ---- career cluster (jobs + education), folded into the dot-nav ----
+   The nav has no explicit width — it shrinks to fit its widest child and is
+   pinned by `right`, so when this segment grows it expands leftward from a
+   fixed right edge, never reaching the centered content column. Labels
+   reveal either while scrolling through the cluster (.is-expanded, driven by
+   StageContext) or on hover/focus of an individual node. */
+.stage-nav-career {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-left: 0.15rem;
+}
+.stage-nav-career::before {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: var(--border);
+  border-radius: 1px;
+}
+.stage-nav-career-fill {
+  position: absolute;
+  left: 0.65rem;
+  top: 0.5rem;
+  width: 2px;
+  border-radius: 1px;
+  background: linear-gradient(to bottom, var(--hue-violet), var(--accent));
+  box-shadow: 0 0 8px var(--accent);
+  transition: height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.stage-nav-career-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.stage-nav-career-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  color: var(--muted);
+  flex: 0 0 auto;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease,
+    transform 0.25s ease, box-shadow 0.25s ease;
+}
+.stage-nav-career-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  line-height: 1.25;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.35s ease, opacity 0.2s ease, margin-left 0.35s ease;
+}
+.stage-nav-career-label strong {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.stage-nav-career-label span {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: var(--muted);
+}
+.stage-nav-career.is-expanded .stage-nav-career-label,
+.stage-nav-career-node:hover .stage-nav-career-label,
+.stage-nav-career-node:focus-visible .stage-nav-career-label {
+  max-width: 11rem;
+  margin-left: 0.65rem;
+  opacity: 1;
+}
+.stage-nav-career-node[data-state="active"] .stage-nav-career-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--accent);
+}
+.stage-nav-career-node[data-state="past"] .stage-nav-career-dot {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.stage-nav-career-node:focus-visible .stage-nav-career-dot {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* narrower than this, the centered content column's right edge sits close
+   enough to the nav that labels risk overlapping it — stay dots-only */
+@media (max-width: 1149px) {
+  .stage-nav-career-label { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-nav-career-fill, .stage-nav-career-label { transition: none; }
+}
+
+@media (max-width: 768px) {
+  .stage-nav {
+    right: 0;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  .stage-nav-progress {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 25;
+    background: var(--border);
+  }
+  .stage-nav-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.25s ease;
+  }
+  .stage-nav-btn { display: none; } /* dots swap for the top progress line on mobile */
+  .stage-nav-career { display: none; }
+}

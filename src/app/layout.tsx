@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Instrument_Serif } from 'next/font/google';
 import Script from 'next/script';
 import './reset.css';
 import './monospace.css';
-import './globals.css';
 import './theme.css';
+import './stages.css';
+import './tailwind.css';
 import { Providers } from './providers';
 
 const sans = Inter({
@@ -16,6 +17,16 @@ const sans = Inter({
 const mono = JetBrains_Mono({
   subsets: ['latin', 'latin-ext'],
   variable: '--font-jetbrains-mono',
+  display: 'swap',
+});
+
+// Display serif for stage titles / hero name — weight 400 is the only weight
+// this face ships (not a variable font), so it's required here.
+const display = Instrument_Serif({
+  subsets: ['latin', 'latin-ext'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-instrument-serif',
   display: 'swap',
 });
 
@@ -80,7 +91,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`} suppressHydrationWarning>
       <body>
         {/* Plain <script>, not next/script — JSON-LD must be in the initial
             server-rendered HTML for crawlers, not injected client-side. */}

@@ -6,10 +6,30 @@
   /* fonts (CSS vars injected by next/font in layout.tsx) */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "JetBrains Mono", monospace;
+  --font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
 
   --accent: #d3ff4f;
   --accent-contrast: #0b0b0c;
   --accent-dim: rgba(211, 255, 79, 0.16);
+
+  /* ---- glass (see .glass in stages.css) ----
+     alpha stays >= .5 so text keeps contrast against whatever mesh color
+     drifts underneath; saturate() alongside the blur is what keeps light-mode
+     glass from reading as flat grey. */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.74);
+  --glass-blur: 18px;
+  --glass-sat: 180%;
+  --glass-ring: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 10px 40px rgba(20, 20, 30, 0.10);
+
+  /* ---- stage hues + mesh ---- */
+  --hue-lime: #d3ff4f;
+  --hue-violet: #8b5cf6;
+  --hue-cyan: #22d3ee;
+  --hue-amber: #fbbf24;
+  --hue-rose: #fb7185;
+  --grain-alpha: 0.035;
 
   /* one uniform corner radius everywhere */
   --radius: 8px;
@@ -59,7 +79,22 @@
   --term-bg: #0b0b0d;
   --term-boot: #8ab4ff;
 
+  --glass-bg: rgba(22, 22, 26, 0.55);
+  --glass-bg-strong: rgba(22, 22, 26, 0.74);
+  --glass-ring: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --grain-alpha: 0.05;
+
   color-scheme: dark;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme="dark"] {
+    --glass-bg: var(--surface);
+    --glass-bg-strong: var(--surface);
+    --glass-blur: 0px;
+  }
 }
 
 /* ---- base ---- */
@@ -121,7 +156,15 @@ textarea {
   transition: background 0.15s ease, border-color 0.15s ease,
     transform 0.06s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
-button { cursor: pointer; }
+button {
+  cursor: pointer;
+  /* monospace.css hardcodes button height to 2 line-heights (~38px) for its
+     single-line brutalist buttons — silently clips any button with wrapping
+     multi-line content (recap cards, expanded nav nodes). Let height follow
+     content everywhere; single-line buttons are unaffected since their
+     content already fits. */
+  height: auto;
+}
 button:hover {
   background: var(--surface-alt);
   border-color: var(--border-strong);
@@ -156,6 +199,7 @@ textarea { resize: none; }
 .chip {
   display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
   font-family: var(--font-mono);
   font-size: 0.8rem;
   line-height: 1.2;
@@ -164,13 +208,27 @@ textarea { resize: none; }
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
+  text-decoration: none;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease,
+    transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.2s ease;
 }
+.chip svg { transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.15s ease; }
 .chip:hover {
   color: var(--text);
   border-color: var(--accent);
   background: var(--accent-dim);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -8px var(--accent), 0 0 0 1px var(--accent) inset;
+}
+.chip:hover svg { color: var(--accent); transform: scale(1.1); }
+.chip:active {
+  transform: translateY(0);
+  transition-duration: 0.05s;
+}
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ---- page layout ----
@@ -178,16 +236,18 @@ textarea { resize: none; }
    bottom and only becomes a full-height column once it opens as an overlay. */
 .page {
   min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
   width: 100%;
-  max-width: 44rem;
-  margin: 0 auto;
-  padding: 0 1rem;
-  /* chat-dock is the last flex child here and is itself sticky, so padding on
-     .page would land below it (dead scroll space past the dock) rather than
-     between the overview and the dock — the actual gap comes from
-     .overview's own bottom margin below. */
+  /* stages own their own centered 44rem column (.stage-inner); .page itself
+     spans full width so full-bleed mesh/gradients behind the stages can
+     reach the viewport edge. */
+  /* Scopes stacking to .page so the negative-z-index background layers
+     (.pattern/.mesh/.grain — all position:fixed children of .page) paint
+     above <body>'s own opaque background instead of below it. Without this,
+     body's background is an unpositioned box that sits above negative
+     z-index descendants in the root stacking context, hiding them entirely.
+     isolation doesn't change position:fixed's containing block (still the
+     viewport) — only paint order — so nothing here shifts layout. */
+  isolation: isolate;
 }
 .spot-col {
   width: 100%;
@@ -233,6 +293,15 @@ textarea { resize: none; }
 }
 .spot-input-row:focus-within {
   border-color: var(--accent);
+}
+/* the glass pill (.chat-dock) already supplies the card chrome — the input
+   row inside it goes flat so there's no double border/shadow. Still used
+   undecorated-parent inside the open .chat-panel, where its own chrome applies. */
+.chat-dock .spot-input-row {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0.5rem 0.75rem;
 }
 .term-input {
   flex: 1;
@@ -409,6 +478,15 @@ textarea { resize: none; }
   flex-direction: column;
   gap: 0.15rem;
 }
+/* an earlier stint at the same company — nested beneath the current role's
+   bullets, LinkedIn-style grouped positions, instead of one flattened bullet */
+.timeline-prev {
+  margin-top: 0.6rem;
+  padding: 0.6rem 0 0 0.9rem;
+  border-left: 2px solid var(--border);
+}
+.timeline-prev .timeline-role { font-size: 0.92rem; }
+.timeline-prev .timeline-date { font-size: 0.72rem; }
 
 /* ---- project card ---- */
 .project-card {
@@ -477,30 +555,31 @@ textarea { resize: none; }
   .msg-bubble { max-width: 88%; }
   .msg-bubble-rich { max-width: 100%; }
   .timeline-head { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
-  .page { padding: 0 0.75rem; }
-  .overview { padding-bottom: 4rem; }
-  .chat-dock { padding-bottom: max(0.9rem, env(safe-area-inset-bottom)); }
+  .chat-dock { bottom: max(0.9rem, env(safe-area-inset-bottom)); }
   .chat-panel { max-height: 92dvh; padding-bottom: env(safe-area-inset-bottom); }
 }
 
 /* ---- docked chat input / expanding bottom sheet ----
-   Closed: only the input row, stuck to the bottom of the document (sticky,
-   not fixed — participates in layout, avoids iOS fixed-element jitter) with a
-   backdrop + top fade so overview content scrolling under it stays legible.
-   Open: a card that expands up from the same spot, over a dimmed backdrop.
-   The overview page stays put underneath — collapsing the sheet (handle,
-   backdrop click, or Escape) is how the user returns to it. */
+   Closed: a floating glass pill, fixed over every stage (not sticky — the
+   page is now a set of independent 100dvh stages, not one flex column, so
+   sticky has no scrolling ancestor to stick within). Open: a card that
+   expands up from the same spot, over a dimmed backdrop. The stage the user
+   was on stays put underneath — collapsing the sheet (handle, backdrop
+   click, or Escape) returns them to it. */
 .chat-dock {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  padding-top: 1.5rem;
-  /* the bar floats clear of the viewport edge instead of sitting flush
-     against it — this is what actually reads as "floating", not just the
-     gap above it */
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
-  margin-top: auto;
-  background: linear-gradient(to bottom, transparent, var(--bg) 40%);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 1.1rem;
+  z-index: 30;
+  width: min(44rem, calc(100% - 1.5rem));
+  margin: 0 auto;
+  padding: 0.35rem;
+  border-radius: var(--radius-pill);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  box-shadow: var(--glass-ring), var(--glass-shadow);
 }
 .chat-panel-backdrop {
   position: fixed;
@@ -525,16 +604,28 @@ textarea { resize: none; }
   max-height: min(85dvh, 42rem);
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: var(--shadow);
-  /* transform is driven from JS (open/close slide + live drag offset); this
-     transition is what makes both the settle-in and the snap-back smooth —
-     it's turned off inline while the handle is actively being dragged. */
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  will-change: transform;
+  box-shadow: var(--glass-ring), var(--glass-shadow);
+  /* transform is driven from JS (open/close slide + live drag offset, plus a
+     small scale so the card feels like it's materializing rather than just
+     sliding — see the `scale()` in Chat.tsx's inline style); this transition
+     is what makes settle-in, snap-back, and the opacity/blur pop smooth. It's
+     turned off inline while the handle is actively being dragged. */
+  transform-origin: bottom center;
+  opacity: 0;
+  filter: blur(10px);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.32s ease, filter 0.32s ease;
+  will-change: transform, opacity, filter;
+}
+.chat-panel.is-open {
+  opacity: 1;
+  filter: blur(0);
 }
 .chat-panel-handle {
   flex: 0 0 auto;
@@ -563,30 +654,7 @@ textarea { resize: none; }
   background: var(--accent);
 }
 
-/* ---- CV overview ---- */
-.overview {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  /* real breathing room below the last section before the docked chat bar —
-     .overview and .chat-dock are flex siblings in .page, so this bottom
-     padding (not .page's) is what actually separates content from the dock. */
-  padding: var(--space-4) 0 5rem;
-}
-.ov-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  animation: fadeInUp 0.32s ease both;
-}
-.ov-heading {
-  /* monospace.css's h1-h6 rule sets a heavy default margin (top: 2 line-heights,
-     bottom: 1) — inside a flex column that margin doesn't collapse away, it just
-     adds silent extra space on top of .ov-section's own gap. Zero it and let
-     the flex gap be the only source of spacing. */
-  margin: 0;
-  font-size: 1.05rem;
-}
+/* ---- reusable card, used across stages (education/skills/contact/projects) ---- */
 .ov-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -594,36 +662,21 @@ textarea { resize: none; }
   padding: var(--space-3);
 }
 
+/* ---- hero ---- */
 .hero {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-}
-.hero-top {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.hero-avatar {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  flex: 0 0 auto;
+  gap: var(--space-4);
+  align-items: flex-start;
 }
 .hero-heading {
   min-width: 0;
-  /* override monospace.css's global h1 top margin — it would otherwise add
-     dead space above the name and throw off centering against the avatar */
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.4rem;
 }
-.hero-heading h1 { margin: 0; line-height: 1.15; }
-.hero-title { margin: 0; }
+.hero-title { margin: 0; font-size: 1.1rem; }
 .hero-location { font-size: 0.85rem; }
-.hero-tagline { margin: 0; }
 .hero-links {
   display: flex;
   flex-wrap: wrap;
@@ -791,6 +844,6 @@ textarea { resize: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .msg-in, .cursor, .typing span, .ov-section, .mf-feedback-icon { animation: none; }
+  .msg-in, .cursor, .typing span, .mf-feedback-icon { animation: none; }
   .chat-panel, .chat-panel-backdrop { transition: none; }
 }
