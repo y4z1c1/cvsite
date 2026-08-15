@@ -10,11 +10,32 @@ import AvatarTracker from './AvatarTracker';
 
 const COPIED_REVERT_MS = 2000;
 
+const buildCVDownloadName = () => {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const date = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+  ].join('-');
+  const time = [
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds()),
+  ].join('-');
+
+  return `cv-yusuf-anil-yazici-${date}_${time}.pdf`;
+};
+
 const Hero = () => {
   const { t } = useTranslation();
   const { language } = useContext(LanguageContext);
   const [copied, setCopied] = useState(false);
   const revertTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleCVDownload = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.currentTarget.download = buildCVDownloadName();
+  };
 
   const copyForAI = async () => {
     try {
@@ -42,7 +63,13 @@ const Hero = () => {
       </div>
       <p className="hero-tagline" style={{ '--i': 1 } as React.CSSProperties}>{t('heroTagline')}</p>
       <div className="hero-links" style={{ '--i': 2 } as React.CSSProperties}>
-        <a className="chip glass" href={LINKS.cv} download aria-label={t('downloadCV')}>
+        <a
+          className="chip glass"
+          href={LINKS.cv}
+          download="cv-yusuf-anil-yazici.pdf"
+          onClick={handleCVDownload}
+          aria-label={t('downloadCV')}
+        >
           <FaDownload size={13} /> {t('downloadCV')}
         </a>
         <a className="chip glass" href={LINKS.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
