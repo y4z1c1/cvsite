@@ -1,4 +1,5 @@
 import type { TechId } from './career';
+import type { MetricKey } from './liveStats';
 
 export type Project = {
   id: string;
@@ -8,8 +9,13 @@ export type Project = {
   /** Filename stem looked up as /logos/{logoId}.png; falls back to a generic icon. */
   logoId: string;
   tech: TechId[];
-  /** Live platform numbers; formatted per-locale at render time. */
-  stats: { value: number; label: { en: string; tr: string } }[];
+  /**
+   * Platform numbers, formatted per-locale at render time. `value` is the
+   * last-known-good fallback and is what renders until — or unless — the live
+   * count for `metricKey` arrives from /api/stats. Stats without a `metricKey`
+   * are static by definition.
+   */
+  stats: { value: number; metricKey?: MetricKey; label: { en: string; tr: string } }[];
   links: { label: string; url: string }[];
 };
 
@@ -27,14 +33,19 @@ export const PROJECTS: Project[] = [
     },
     logoId: 'bogazicicim',
     tech: ['nextjs', 'typescript', 'supabase', 'tailwind', 'docker', 'github-actions', 'cloudflare', 'hetzner'],
+    // Live from bogazicicim.com/api/public/stats; these values are the
+    // fallback. `courseTeacherReviews` is deliberately ONE combined count —
+    // upstream attaches a review to a course x teacher pair, so splitting it
+    // into separate course and teacher numbers would double-count.
+    // `clubReviews` is disjoint from it.
     stats: [
-      { value: 3239, label: { en: 'users', tr: 'kullanıcı' } },
-      { value: 17815, label: { en: 'course/teacher reviews', tr: 'ders/hoca yorumu' } },
-      { value: 2008, label: { en: 'teachers', tr: 'hoca' } },
-      { value: 4206, label: { en: 'courses', tr: 'ders' } },
-      { value: 50, label: { en: 'clubs', tr: 'kulüp' } },
-      { value: 1812, label: { en: 'club reviews', tr: 'kulüp yorumu' } },
-      { value: 34997, label: { en: 'forum posts', tr: 'forum gönderisi' } },
+      { value: 3239, metricKey: 'users', label: { en: 'users', tr: 'kullanıcı' } },
+      { value: 17815, metricKey: 'courseTeacherReviews', label: { en: 'course/teacher reviews', tr: 'ders/hoca yorumu' } },
+      { value: 2008, metricKey: 'teachers', label: { en: 'teachers', tr: 'hoca' } },
+      { value: 4206, metricKey: 'courses', label: { en: 'courses', tr: 'ders' } },
+      { value: 50, metricKey: 'clubs', label: { en: 'clubs', tr: 'kulüp' } },
+      { value: 1812, metricKey: 'clubReviews', label: { en: 'club reviews', tr: 'kulüp yorumu' } },
+      { value: 34997, metricKey: 'forumPosts', label: { en: 'forum posts', tr: 'forum gönderisi' } },
     ],
     links: [{ label: 'bogazicicim.com', url: 'https://bogazicicim.com' }],
   },
