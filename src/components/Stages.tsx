@@ -10,6 +10,7 @@ import ExperienceStage from './ExperienceStage';
 import ProjectCard from './ProjectCard';
 import SkillsGrid from './SkillsGrid';
 import RecapStage from './RecapStage';
+import MessageForm from './MessageForm';
 
 const WORK = EXPERIENCES.filter((e) => e.kind === 'work');
 const EDUCATION = EXPERIENCES.filter((e) => e.kind === 'education');
@@ -88,8 +89,24 @@ const Stages = () => {
         navLabel={t('recap')}
         wide
       >
-        <p className="recap-intro">{t('recapIntro')}</p>
-        <RecapStage language={language} messageHeading={t('messageHeading')} />
+        <p className="stage-lede">{t('recapIntro')}</p>
+        <RecapStage language={language} />
+      </Stage>
+
+      {/* The closing stage. Deliberately the narrow (non-wide) column and the
+          only thing on screen — it's the one place a visitor is asked to act,
+          so it gets a page rather than a tile in the recap grid. */}
+      <Stage
+        id="contact"
+        kicker={`${String(WORK.length + EDUCATION.length + PROJECTS.length + 3).padStart(2, '0')} — ${t('contact').toUpperCase()}`}
+        title={t('messageHeading')}
+        hue="violet"
+        navLabel={t('contact')}
+      >
+        <p className="stage-lede">{t('messageIntro')}</p>
+        <div className="ov-card glass">
+          <MessageForm variant="section" />
+        </div>
       </Stage>
     </div>
   );

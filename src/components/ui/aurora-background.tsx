@@ -37,7 +37,14 @@ export function AuroraBackground({ className, showRadialGradient = true }: Auror
             'motion-safe:after:animate-aurora pointer-events-none absolute -inset-[10px]',
             '[background-image:var(--white-gradient),var(--aurora)] [background-size:300%,200%] [background-position:50%_50%,50%_50%]',
             'opacity-30 blur-[10px] will-change-transform',
-            "after:absolute after:inset-0 after:[background-image:var(--dark-gradient),var(--aurora)] after:[background-size:200%,100%] after:[background-attachment:fixed] after:mix-blend-difference after:content-['']",
+            // `background-attachment: fixed` is pointer-fine only. This whole
+            // layer already sits in a `fixed inset-0` wrapper, so attachment
+            // buys nothing visually — but it forces the browser to re-resolve
+            // and repaint a blurred, difference-blended, 200%-sized gradient
+            // against the viewport on every scroll frame. That's the aurora's
+            // share of mobile scroll jank; mobile Safari doesn't even honour
+            // it properly. Scroll-attached everywhere else.
+            "after:absolute after:inset-0 after:[background-image:var(--dark-gradient),var(--aurora)] after:[background-size:200%,100%] pointer-fine:after:[background-attachment:fixed] after:mix-blend-difference after:content-['']",
             showRadialGradient &&
               '[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,transparent_70%)]',
           )}

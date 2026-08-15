@@ -27,6 +27,16 @@ html {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-snap-type: none; scroll-behavior: auto; }
 }
+/* Touch keeps the base `y proximity` — never `mandatory`. Under mandatory the
+   scroller must come to rest ON a snap point, so any stretch between two snap
+   points that is taller than the viewport becomes unreachable: scroll into the
+   middle of it and the browser yanks you back to one end. Proximity only
+   engages when the flick already ends near a snap point, so short stages click
+   into place and tall ones scroll freely. That difference is the whole "smooth
+   vs. fighting me" feel on a phone.
+   What made touch snapping feel bad before was never the snap itself — it was
+   dvh relayout + a per-frame full-viewport blur + the aurora repaint all
+   landing mid-gesture. Those are gone (see below), so the snap can come back. */
 
 /* ---- background layers ----
    Fixed, sit outside .stages, and are the ONLY elements allowed to combine
@@ -85,6 +95,24 @@ html {
 .stage[data-hue="amber"]  { --stage-hue: var(--hue-amber); }
 .stage[data-hue="rose"]   { --stage-hue: var(--hue-rose); }
 
+/* A stage taller than the viewport is not a snap point. Snapping parks its top
+   at the viewport top, which leaves the overflow below the fold reachable only
+   by out-scrolling the snap — the reader pushes, the page pulls back. Dropping
+   the snap point lets those stages scroll like normal content while every
+   stage that does fit still clicks into place.
+   `data-tall` is measured per stage at runtime (Stage.tsx) rather than guessed
+   from a breakpoint, because whether a stage fits depends on viewport height,
+   the active language, and whether the display font has loaded yet. */
+.stage[data-tall="true"] { scroll-snap-align: none; }
+/* Touch: svh, not dvh. Mobile browsers grow and shrink dvh live as the URL bar
+   hides and reappears during a scroll, so every stage re-lays-out mid-gesture
+   and the content creeps under the finger. svh is the *small* viewport height,
+   fixed at the URL-bar-visible size, so stage heights hold still for the whole
+   scroll. Desktop has no collapsing chrome and keeps dvh. */
+@media (pointer: coarse) {
+  .stage { min-height: 100svh; }
+}
+
 /* focus targets land inside the active band, not flush at the viewport edge */
 .stage a, .stage button, .stage input, .stage textarea {
   scroll-margin-block: 22vh;
@@ -101,10 +129,17 @@ html {
   filter: none;
 }
 .stages-js .stage.is-in .stage-vel {
-  filter: blur(calc(var(--vblur, 0px) * var(--vblur-scale, 1)));
+  filter: blur(var(--vblur, 0px));
 }
+/* Touch: no velocity blur. Re-blurring a full-viewport subtree every frame is
+   the single most expensive thing happening during a scroll, and on a phone
+   it costs more frames than the effect is worth — dropped frames read as the
+   page stuttering under the finger. `none`, not `blur(0)`: a zero-radius blur
+   still allocates the filter layer and repaints it.
+   useScrollVelocity.ts bails on coarse pointers too, so --vblur is never even
+   written; this rule is what makes that safe regardless. */
 @media (pointer: coarse) {
-  :root { --vblur-scale: 0.5; }
+  .stages-js .stage.is-in .stage-vel { filter: none; }
 }
 
 .stage-inner {
@@ -135,6 +170,20 @@ html {
   opacity: 1;
   filter: blur(0);
   transform: none;
+}
+/* Touch: same choreography, cheaper. A 22px blur over a full-viewport subtree
+   is a big offscreen buffer to allocate and composite, and on mobile two
+   neighbouring stages are usually mid-transition while a third is being
+   scrolled — halving the radii keeps the depth cue without the frame cost. */
+@media (pointer: coarse) {
+  .stages-js .stage.is-ahead .stage-inner {
+    filter: blur(7px);
+    transform: translateY(5vh) scale(0.98);
+  }
+  .stages-js .stage.is-behind .stage-inner {
+    filter: blur(10px);
+    transform: translateY(-3vh) scale(1.03);
+  }
 }
 /* stagger direct children in on entry */
 .stages-js .stage.is-in .stage-inner > * {
@@ -254,18 +303,28 @@ html {
 }
 /* the copy-for-AI hero chip pops lime + a quick scale on success, echoing
    the send button's accent instead of introducing a new color */
-.hero-links .chip[data-copied="true"] {
+.hero-links .chip[data-copied="true"],
+/* the pointer is still on the chip the moment it flips to "copied", so the
+   generic .chip:hover colors have to be beaten here or the label and tick
+   render in hover ink on the lime fill */
+.hero-links .chip[data-copied="true"]:hover {
   color: var(--accent-contrast);
   background: var(--accent);
   border-color: transparent;
   animation: mfPop 0.3s ease both;
 }
+.hero-links .chip[data-copied="true"] svg,
+.hero-links .chip[data-copied="true"]:hover svg { color: var(--accent-contrast); }
 
-/* ---- recap stage: Apple-keynote-style summary grid ---- */
-.recap-intro {
+/* Standfirst paragraph under a stage title (recap, contact). Capped short of
+   the column width so it stays a readable measure rather than a full-width
+   run of text. */
+.stage-lede {
   color: var(--muted);
   max-width: 40rem;
 }
+
+/* ---- recap stage: Apple-keynote-style summary grid ---- */
 .recap-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
@@ -293,10 +352,8 @@ html {
   height: 2rem;
   border-radius: 50%;
   background: var(--accent-dim);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
-[data-theme="light"] .recap-card-icon,
-:root:not([data-theme="dark"]) .recap-card-icon { color: #7a9c1e; }
 .recap-card-title {
   font-family: var(--font-mono);
   font-weight: 500;
@@ -310,16 +367,7 @@ html {
 .recap-card-skills {
   display: flex;
   gap: 0.4rem;
-  color: var(--accent);
-}
-.recap-card-message {
-  grid-column: 1 / -1;
-  cursor: default;
-  align-items: stretch;
-}
-.recap-card-message .message-form { margin-top: 0.2rem; }
-@media (min-width: 640px) {
-  .recap-card-message { grid-column: span 2; }
+  color: var(--accent-ink);
 }
 
 /* ---- experience stage ---- */
@@ -521,12 +569,12 @@ html {
   transition: background 0.25s ease, transform 0.25s ease;
 }
 .stage-nav-btn[aria-current="true"] .stage-nav-dot {
-  background: var(--accent);
+  background: var(--accent-line);
   transform: scale(1.6);
 }
 .stage-nav-btn:hover .stage-nav-dot,
 .stage-nav-btn:focus-visible .stage-nav-dot {
-  background: var(--accent);
+  background: var(--accent-line);
 }
 .stage-nav-progress { display: none; } /* desktop uses the dot rail instead */
 
@@ -559,8 +607,8 @@ html {
   top: 0.5rem;
   width: 2px;
   border-radius: 1px;
-  background: linear-gradient(to bottom, var(--hue-violet), var(--accent));
-  box-shadow: 0 0 8px var(--accent);
+  background: linear-gradient(to bottom, var(--hue-violet), var(--accent-line));
+  box-shadow: 0 0 8px var(--accent-line);
   transition: height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .stage-nav-career-node {
@@ -619,18 +667,18 @@ html {
 }
 .stage-nav-career-node[data-state="active"] .stage-nav-career-dot {
   background: var(--accent);
-  border-color: var(--accent);
+  border-color: var(--accent-line);
   color: var(--accent-contrast);
   transform: scale(1.2);
-  box-shadow: 0 0 10px var(--accent);
+  box-shadow: 0 0 10px var(--accent-line);
 }
 .stage-nav-career-node[data-state="past"] .stage-nav-career-dot {
   background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--accent-line);
+  color: var(--accent-ink);
 }
 .stage-nav-career-node:focus-visible .stage-nav-career-dot {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-line);
   outline-offset: 2px;
 }
 /* narrower than this, the centered content column's right edge sits close
@@ -643,21 +691,10 @@ html {
 }
 
 @media (max-width: 768px) {
-  .stage-nav {
-    right: 0;
-    left: 0;
-    top: 0;
-    bottom: auto;
-    transform: none;
-    flex-direction: row;
-    justify-content: center;
-    padding: 0;
-    gap: 0;
-    background: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
-  }
+  /* The whole rail goes, not just its children — every child was already
+     display:none here, which left a 0-height fixed bar pinned across the top
+     at z-index 25 doing nothing. The top progress line replaces it. */
+  .stage-nav { display: none; }
   .stage-nav-progress {
     display: block;
     position: fixed;
@@ -670,9 +707,10 @@ html {
   }
   .stage-nav-progress-fill {
     height: 100%;
-    background: var(--accent);
+    background: var(--accent-line);
     transition: width 0.25s ease;
   }
-  .stage-nav-btn { display: none; } /* dots swap for the top progress line on mobile */
-  .stage-nav-career { display: none; }
+}
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .stage-nav-progress-fill { transition: none; }
 }

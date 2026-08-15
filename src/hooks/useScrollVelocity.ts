@@ -13,6 +13,10 @@ export function useScrollVelocity() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Touch devices don't get the blur at all (see the `pointer: coarse` rule
+    // in stages.css), so don't run an rAF loop writing a property nothing
+    // reads — that's a style recalc per scroll frame for no visible effect.
+    if (window.matchMedia('(pointer: coarse)').matches) return;
 
     const root = document.documentElement;
     let raf = 0;

@@ -11,6 +11,14 @@
   --accent: #d3ff4f;
   --accent-contrast: #0b0b0c;
   --accent-dim: rgba(211, 255, 79, 0.16);
+  /* --accent is a *background* color only. The lime measures 1.15:1 against
+     white, so using it as a foreground (text, icons, focus rings, carets,
+     dots) is invisible in light mode — reach for these instead. Both collapse
+     back to plain --accent in dark, where the lime already has the contrast.
+       --accent-ink   text + icons        5.3:1 on --bg  (WCAG AA)
+       --accent-line  non-text UI marks   3.9:1 on --bg  (WCAG AA non-text) */
+  --accent-ink: #55700d;
+  --accent-line: #6d8c17;
 
   /* ---- glass (see .glass in stages.css) ----
      alpha stays >= .5 so text keeps contrast against whatever mesh color
@@ -85,6 +93,9 @@
   --glass-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
   --grain-alpha: 0.05;
 
+  --accent-ink: var(--accent);
+  --accent-line: var(--accent);
+
   color-scheme: dark;
 }
 
@@ -136,7 +147,7 @@ a {
   text-underline-offset: 2px;
   transition: color 0.15s ease;
 }
-a:hover { color: var(--accent); }
+a:hover { color: var(--accent-ink); }
 
 ::selection {
   background: var(--accent);
@@ -174,7 +185,7 @@ button:active { transform: translateY(1px); }
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-line);
   outline-offset: 2px;
   border-color: transparent;
 }
@@ -216,18 +227,18 @@ textarea { resize: none; }
 .chip svg { transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.15s ease; }
 .chip:hover {
   color: var(--text);
-  border-color: var(--accent);
+  border-color: var(--accent-line);
   background: var(--accent-dim);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -8px var(--accent), 0 0 0 1px var(--accent) inset;
+  box-shadow: 0 8px 20px -8px var(--accent-line), 0 0 0 1px var(--accent-line) inset;
 }
-.chip:hover svg { color: var(--accent); transform: scale(1.1); }
+.chip:hover svg { color: var(--accent-ink); transform: scale(1.1); }
 .chip:active {
   transform: translateY(0);
   transition-duration: 0.05s;
 }
 .chip:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-line);
   outline-offset: 2px;
 }
 
@@ -267,6 +278,10 @@ textarea { resize: none; }
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* Hitting either end of the transcript must not hand the scroll off to the
+     page behind the sheet (or to Safari's pull-to-refresh). `contain` stops
+     the chaining without disabling the sheet's own rubber-band. */
+  overscroll-behavior-y: contain;
   font-size: 0.92rem;
   line-height: 1.55;
   /* fade content out near the top edge instead of hard-clipping */
@@ -292,7 +307,7 @@ textarea { resize: none; }
   box-shadow: var(--shadow);
 }
 .spot-input-row:focus-within {
-  border-color: var(--accent);
+  border-color: var(--accent-line);
 }
 /* the glass pill (.chat-dock) already supplies the card chrome — the input
    row inside it goes flat so there's no double border/shadow. Still used
@@ -302,6 +317,11 @@ textarea { resize: none; }
   border: none;
   box-shadow: none;
   padding: 0.5rem 0.75rem;
+  /* The mobile rule below adds a safe-area bottom margin so the row clears the
+     home indicator inside the open .chat-panel. The closed pill doesn't need
+     it — .chat-dock already offsets itself by the same inset — and inheriting
+     it left ~10px of dead glass under the input, off-centring the pill. */
+  margin-bottom: 0;
 }
 .term-input {
   flex: 1;
@@ -314,7 +334,7 @@ textarea { resize: none; }
   color: var(--text);
   font: inherit;
   font-family: var(--font-sans);
-  caret-color: var(--accent);
+  caret-color: var(--accent-line);
 }
 .term-input:focus,
 .term-input:focus-visible {
@@ -335,7 +355,10 @@ textarea { resize: none; }
   border: 1px solid transparent;
   flex: 0 0 auto;
 }
-.send-btn:hover:not(:disabled) { opacity: 0.85; background: var(--accent); }
+/* Darken on hover rather than fading with opacity — opacity blends the whole
+   button (icon included) toward the page behind it, which *lowers* the
+   icon-on-accent contrast; brightness moves the fill only. */
+.send-btn:hover:not(:disabled) { filter: brightness(0.92); }
 .send-btn:disabled {
   background: var(--surface-alt);
   color: var(--muted);
@@ -417,9 +440,7 @@ textarea { resize: none; }
   color: var(--muted);
   white-space: nowrap;
 }
-.tech-chip svg { color: var(--accent); }
-[data-theme="light"] .tech-chip svg,
-:root:not([data-theme="dark"]) .tech-chip svg { color: #7a9c1e; }
+.tech-chip svg { color: var(--accent-ink); }
 
 /* ---- career timeline ---- */
 .timeline {
@@ -509,7 +530,7 @@ textarea { resize: none; }
 .project-link {
   font-size: 0.78rem;
   font-weight: 400;
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: none;
 }
 .project-link:hover { text-decoration: underline; }
@@ -651,7 +672,7 @@ textarea { resize: none; }
 }
 .chat-panel-handle:hover .chat-panel-grip,
 .chat-panel-handle:focus-visible .chat-panel-grip {
-  background: var(--accent);
+  background: var(--accent-line);
 }
 
 /* ---- reusable card, used across stages (education/skills/contact/projects) ---- */
@@ -716,7 +737,13 @@ textarea { resize: none; }
   background: var(--accent);
   color: var(--accent-contrast);
 }
-.message-form .chip:hover { background: var(--accent); opacity: 0.85; }
+/* brightness, not opacity — see .send-btn:hover */
+.message-form .chip:hover {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  filter: brightness(0.92);
+}
+.message-form .chip:hover svg { color: var(--accent-contrast); }
 .message-form .chip:disabled {
   background: var(--surface-alt);
   color: var(--muted);
@@ -746,7 +773,7 @@ textarea { resize: none; }
   animation: mfPulse 1.1s ease-in-out infinite;
 }
 .mf-feedback[data-status="success"] .mf-feedback-icon {
-  color: var(--accent);
+  color: var(--accent-ink);
   animation: mfPop 0.35s ease both;
 }
 .mf-feedback[data-status="error"] .mf-feedback-icon,
@@ -775,7 +802,7 @@ textarea { resize: none; }
   height: 1.05em;
   margin-left: 1px;
   transform: translateY(2px);
-  background: var(--accent);
+  background: var(--accent-line);
   animation: blink 1.05s steps(1) infinite;
 }
 
@@ -803,7 +830,7 @@ textarea { resize: none; }
 .md ul { list-style: disc; }
 .md ol { list-style: decimal; }
 .md li { margin: 0.15em 0; }
-.md a { color: var(--accent); }
+.md a { color: var(--accent-ink); }
 .md strong { font-weight: 700; }
 .md code {
   font-family: var(--font-mono);

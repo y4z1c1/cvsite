@@ -4,6 +4,7 @@ import { FaBriefcase, FaGraduationCap } from 'react-icons/fa';
 import { LanguageContext } from '../context/LanguageContext';
 import { useStageContext } from '../context/StageContext';
 import { EXPERIENCES } from '../lib/career';
+import { PROJECTS } from '../lib/projects';
 
 type CareerNode = {
   id: string;
@@ -23,10 +24,21 @@ const CAREER_NODES: CareerNode[] = EXPERIENCES.map((e) => ({
 }));
 const PLAIN_STAGES = [
   { id: 'hero', label: 'Intro' },
-  { id: 'proj-bogazicicim', label: 'Boğaziçi Çim' },
-  { id: 'proj-cvsite', label: 'cvsite' },
+  // derived, not hardcoded — Stages.tsx renders one stage per PROJECTS entry,
+  // so a new project would otherwise silently lose its dot and its slot in the
+  // mobile progress count
+  ...PROJECTS.map((p) => ({ id: `proj-${p.id}`, label: p.name })),
   { id: 'skills', label: 'Skills' },
   { id: 'recap', label: 'Recap' },
+  { id: 'contact', label: 'Contact' },
+];
+
+// Every stage id in document order (see Stages.tsx): intro, the career
+// cluster, then projects/skills/recap. Drives the mobile progress bar.
+const STAGE_ORDER = [
+  PLAIN_STAGES[0].id,
+  ...CAREER_NODES.map((n) => n.id),
+  ...PLAIN_STAGES.slice(1).map((s) => s.id),
 ];
 
 const goTo = (id: string) => {
@@ -48,7 +60,25 @@ const StageNav = () => {
   const careerExpanded = careerActiveIndex >= 0;
   const careerFillPct = careerExpanded ? ((careerActiveIndex + 0.5) / CAREER_NODES.length) * 100 : 0;
 
+  // Mobile hides the dot rail entirely (stages.css) and shows this hairline at
+  // the top of the viewport instead, so touch visitors still get a sense of
+  // how far through the page they are. Stage-stepped rather than scroll-linked
+  // to match the rail's semantics and the CSS width transition.
+  const activeIndex = STAGE_ORDER.indexOf(activeId ?? '');
+  const progressPct = activeIndex < 0 ? 0 : ((activeIndex + 1) / STAGE_ORDER.length) * 100;
+
   return (
+    <>
+    <div
+      className="stage-nav-progress"
+      role="progressbar"
+      aria-label="Page progress"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(progressPct)}
+    >
+      <div className="stage-nav-progress-fill" style={{ width: `${progressPct}%` }} />
+    </div>
     <nav className="stage-nav glass" aria-label="Section navigation">
       <button
         type="button"
@@ -98,6 +128,7 @@ const StageNav = () => {
         </button>
       ))}
     </nav>
+    </>
   );
 };
 

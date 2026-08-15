@@ -1,22 +1,22 @@
 'use client';
-import { FaGraduationCap, FaCode, FaPaperPlane } from 'react-icons/fa';
+import { FaGraduationCap, FaCode } from 'react-icons/fa';
 import { EXPERIENCES, SKILL_GROUPS, TECH_ICONS } from '../lib/career';
 import { PROJECTS } from '../lib/projects';
 import CompanyLogo from './CompanyLogo';
-import MessageForm from './MessageForm';
 
-type Props = { language: 'en' | 'tr'; messageHeading: string };
+type Props = { language: 'en' | 'tr' };
 
 const goTo = (id: string) => {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
 };
 
-// An Apple-keynote-style "recap" grid — one small card per stage above,
-// click any card to jump back to it — capped off by the message form as the
-// final, largest card, so the last thing a visitor sees is a clear CTA
-// rather than a fading list.
-const RecapStage = ({ language, messageHeading }: Props) => {
+// An Apple-keynote-style "recap" grid — one small card per stage above, click
+// any card to jump back to it. Every child here is a jump-back button and
+// nothing else; the contact form used to sit in this grid as a double-width
+// card, which crowded the recap and made one tile behave unlike all the
+// others. It's its own stage now (see Stages.tsx).
+const RecapStage = ({ language }: Props) => {
   const work = EXPERIENCES.filter((e) => e.kind === 'work');
   const education = EXPERIENCES.filter((e) => e.kind === 'education');
   const topSkills = SKILL_GROUPS.flatMap((g) => g.items).slice(0, 6);
@@ -57,12 +57,6 @@ const RecapStage = ({ language, messageHeading }: Props) => {
           })}
         </span>
       </button>
-
-      <div className="recap-card recap-card-message glass">
-        <span className="recap-card-icon"><FaPaperPlane size={16} /></span>
-        <span className="recap-card-title">{messageHeading}</span>
-        <MessageForm variant="section" />
-      </div>
     </div>
   );
 };

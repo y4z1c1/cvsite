@@ -62,6 +62,7 @@ export const translations = {
     recap: "Recap",
     recapTitle: "Everything, at a glance",
     recapIntro: "A quick recap of everything above — click any card to jump back, or say hello below.",
+    messageIntro: "Got a role, a project, or just a question? Leave a note and I'll get back to you.",
   },
   tr: {
     education: "Eğitim",
@@ -126,5 +127,6 @@ export const translations = {
     recap: "Özet",
     recapTitle: "Her şey tek bakışta",
     recapIntro: "Yukarıdakilerin hızlı bir özeti — herhangi bir karta tıkla, ya da aşağıdan merhaba de.",
+    messageIntro: "Bir pozisyon, bir proje ya da aklına takılan bir şey mi var? Not bırak, sana dönüş yapayım.",
   },
 };
