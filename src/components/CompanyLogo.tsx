@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaBriefcase, FaGraduationCap, FaCube } from 'react-icons/fa';
 
 type Props = {
@@ -14,6 +14,17 @@ type Props = {
 // they'll be picked up with zero code changes.
 const CompanyLogo = ({ logoId, alt, kind = 'work', size = 40 }: Props) => {
   const [failed, setFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // onError alone isn't enough: the <img> is server-rendered, so the browser
+  // can request it and give up long before React hydrates and attaches the
+  // handler — the error event is gone by then and the broken-image glyph
+  // sticks. A settled image with no intrinsic width is one that failed, so
+  // re-check that on mount and let onError cover failures after hydration.
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
 
   if (failed) {
     const Icon = kind === 'education' ? FaGraduationCap : kind === 'project' ? FaCube : FaBriefcase;
@@ -27,6 +38,7 @@ const CompanyLogo = ({ logoId, alt, kind = 'work', size = 40 }: Props) => {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      ref={imgRef}
       src={`/logos/${logoId}.png`}
       alt={alt}
       width={size}
