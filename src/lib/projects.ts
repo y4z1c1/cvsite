@@ -50,6 +50,25 @@ export const PROJECTS: Project[] = [
     links: [{ label: 'bogazicicim.com', url: 'https://bogazicicim.com' }],
   },
   {
+    id: 'planstudio',
+    name: 'PlanStudio',
+    tagline: {
+      en: '3D floor-plan viewer: exact room m² + furniture fitting from phone scans',
+      tr: 'telefon taramasından kesin oda m² ölçen 3D ev planı ve mobilya yerleşim aracı',
+    },
+    description: {
+      en: "Scan a home with Polycam, drop the GLB in: per-room areas are measured exactly from the scan's semantic structure, real-scale furniture placement with soft wall physics shows what fits, and a first-person walk mode with openable doors lets you tour it. Vanilla three.js ES modules, no build step; bilingual (TR/EN).",
+      tr: "Evi Polycam ile tarat, GLB'yi bırak: oda alanları taramanın semantik yapısından kesin ölçülür, duvar fizikli gerçek ölçekli mobilya yerleşimi neyin sığacağını gösterir, kapıları açılabilen birinci şahıs dolaşma moduyla evi gezersin. Saf three.js ES modülleri, build adımı yok; iki dilli (TR/EN).",
+    },
+    logoId: 'planstudio',
+    tech: ['javascript', 'threejs', 'docker', 'github-actions', 'cloudflare', 'hetzner'],
+    stats: [],
+    links: [
+      { label: 'plan.yusufanilyazici.com', url: 'https://plan.yusufanilyazici.com' },
+      { label: 'github.com/y4z1c1/planstudio', url: 'https://github.com/y4z1c1/planstudio' },
+    ],
+  },
+  {
     id: 'cvsite',
     name: 'yusufanilyazici.com',
     tagline: {

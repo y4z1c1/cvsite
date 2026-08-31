@@ -6,7 +6,7 @@ import {
   SiTypescript, SiSolidity, SiDjango, SiMysql, SiSui, SiSpring, SiSpringboot,
   SiVuedotjs, SiNodedotjs, SiNextdotjs, SiSupabase, SiDocker, SiGithubactions,
   SiCloudflare, SiHetzner, SiTailwindcss, SiC, SiCplusplus, SiSharp,
-  SiUnity, SiHtml5, SiPostgresql,
+  SiUnity, SiHtml5, SiPostgresql, SiThreedotjs,
 } from 'react-icons/si';
 import { FaBriefcase, FaGraduationCap, FaChartLine } from 'react-icons/fa';
 // react-icons has no Adobe icons in the `si` set — the tabler (`tb`) set does.
@@ -20,7 +20,7 @@ export type TechId =
   | 'spring' | 'spring-boot' | 'django' | 'solidity' | 'sui' | 'node'
   | 'mongodb' | 'mysql' | 'postgresql' | 'soap'
   | 'nextjs' | 'supabase' | 'docker' | 'github-actions' | 'cloudflare'
-  | 'hetzner' | 'tailwind' | 'ml'
+  | 'hetzner' | 'tailwind' | 'ml' | 'threejs'
   | 'c' | 'cpp' | 'csharp' | 'unity' | 'html-css'
   | 'premiere' | 'after-effects' | 'photoshop';
 
@@ -49,6 +49,7 @@ export const TECH_ICONS: Record<TechId, { label: string; Icon: IconType }> = {
   hetzner: { label: 'Hetzner', Icon: SiHetzner },
   tailwind: { label: 'Tailwind CSS', Icon: SiTailwindcss },
   ml: { label: 'Machine Learning', Icon: FaChartLine },
+  threejs: { label: 'three.js', Icon: SiThreedotjs },
   c: { label: 'C', Icon: SiC },
   cpp: { label: 'C++', Icon: SiCplusplus },
   csharp: { label: 'C#', Icon: SiSharp },
