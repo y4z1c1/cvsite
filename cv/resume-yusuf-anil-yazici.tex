@@ -1,0 +1,171 @@
+% Yusuf Anıl Yazıcı — one-page CV.
+% Build: ./cv/build.sh (pdflatex; asserts one page; copies to public/).
+% Content mirrors src/lib/career.ts, src/lib/projects.ts and src/lib/persona.ts —
+% when those change, change this too.
+
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[top=0.45in,bottom=0.45in,left=0.55in,right=0.55in]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+
+\hypersetup{
+  pdfauthor={Yusuf Anıl Yazıcı},
+  pdftitle={Yusuf Anıl Yazıcı CV},
+  pdfsubject={Curriculum Vitae},
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{0in}
+\urlstyle{same}
+\raggedbottom
+\raggedright
+
+% Section heading: small caps, thin rule underneath.
+\titleformat{\section}{\scshape\raggedright\large}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{8pt}{2pt}
+
+% ---- helpers ------------------------------------------------------------
+
+% \entry{title}{right}{subtitle}{right}
+\newcommand{\entry}[4]{%
+  \item
+  \begin{tabular*}{\linewidth}[t]{l@{\extracolsep{\fill}}r}
+    \textbf{#1} & #2 \\
+    \textit{\small #3} & \textit{\small #4} \\
+  \end{tabular*}
+}
+% \entryline{title}{right} — single-line entry (education, projects)
+\newcommand{\entryline}[2]{%
+  \item
+  \begin{tabular*}{\linewidth}[t]{l@{\extracolsep{\fill}}r}
+    \small #1 & #2 \\
+  \end{tabular*}
+}
+\newcommand{\point}[1]{\item\small #1}
+
+\newcommand{\entriesbegin}{\begin{itemize}[leftmargin=0.15in,label={},itemsep=5pt,parsep=0pt,topsep=3pt]}
+\newcommand{\entriesend}{\end{itemize}}
+\newcommand{\pointsbegin}{\begin{itemize}[leftmargin=0.2in,label=$\bullet$,itemsep=0pt,topsep=2pt,parsep=0pt]}
+\newcommand{\pointsend}{\end{itemize}}
+
+% ---- document -----------------------------------------------------------
+
+\begin{document}
+
+\begin{center}
+  {\Huge\scshape Yusuf Anıl Yazıcı}\\[3pt]
+  {\small Computer Engineer \textbar\ Sarıyer, Istanbul, Turkey}\\[2pt]
+  \small
+  \href{tel:+905010618975}{+90 501 061 89 75} $|$
+  \href{mailto:yusufanilyazici@gmail.com}{\underline{yusufanilyazici@gmail.com}} $|$
+  \href{https://www.linkedin.com/in/y4z1c1/}{\underline{linkedin.com/in/y4z1c1}} $|$
+  \href{https://github.com/y4z1c1}{\underline{github.com/y4z1c1}} $|$
+  \href{https://yusufanilyazici.com}{\underline{yusufanilyazici.com}}
+\end{center}
+
+% ---- Education ----------------------------------------------------------
+\section{Education}
+\entriesbegin
+  \entry{Boğaziçi University}{Istanbul, Turkey}
+        {B.Sc.\ in Computer Engineering}{Sep 2021 -- Jun 2026}
+  \entry{Sakarya Cevat Ayhan Science High School}{Sakarya, Turkey}
+        {High School Diploma}{Sep 2017 -- Jun 2021}
+\entriesend
+
+% ---- Experience ---------------------------------------------------------
+\section{Experience}
+\entriesbegin
+
+  \entry{Turkish Technology}{Istanbul, Turkey}
+        {Junior Associate Software Developer (Full-time)}{Aug 2026 -- Present}
+  \pointsbegin
+    \point{Develop full-stack enterprise web apps: Java Spring / Spring Boot and PostgreSQL backend, Vue.js frontend.}
+    \point{Integrate SOAP web services into internal systems while holding to high code-quality and review standards.}
+    \point{Collaborate with cross-functional teams to deliver scalable, maintainable software solutions.}
+  \pointsend
+
+  \entry{Turkish Technology}{Istanbul, Turkey}
+        {Part-Time Full-Stack Developer}{Oct 2025 -- Aug 2026}
+  \pointsbegin
+    \point{Built full-stack web applications with Java Spring and Vue.js alongside university studies.}
+    \point{Promoted to full-time Junior Associate Software Developer in August 2026.}
+  \pointsend
+
+  \entry{RiskOptima WealthTech Corp.}{Istanbul, Turkey}
+        {Software Developer}{Jul 2025 -- Oct 2025}
+  \pointsbegin
+    \point{Developed algorithmic trading strategies and machine learning models for financial markets in Python.}
+    \point{Built automated trading systems and risk-management algorithms for wealth-management workflows.}
+    \point{Backtested strategies for performance and risk metrics; started as an intern, promoted to Software Developer.}
+  \pointsend
+
+  \entry{SuiCityP2E}{Remote}
+        {Blockchain Developer}{Aug 2024 -- Jul 2025}
+  \pointsbegin
+    \point{Developed a play-to-earn blockchain game end to end with React, TypeScript, Node.js and MongoDB.}
+    \point{Wrote Sui Move smart contracts for in-game mechanics, transactions and on-chain asset ownership.}
+    \point{Owned the DevOps pipeline: deployment automation and infrastructure management.}
+  \pointsend
+
+  \entry{Freelance}{Remote}
+        {Full-Stack Developer}{Sep 2022 -- May 2024}
+  \pointsbegin
+    \point{Delivered frontends and Solidity smart-contract integrations for blockchain NFT projects.}
+    \point{Shipped responsive, cross-browser NFT minting dApps; worked directly with clients to scope and deliver.}
+  \pointsend
+
+\entriesend
+
+% ---- Projects -----------------------------------------------------------
+\section{Projects}
+\entriesbegin
+
+  \entryline{\textbf{Boğaziçi Çim} $|$ \emph{Next.js, TypeScript, Supabase, Tailwind CSS, Docker, Cloudflare, Hetzner}}
+            {\href{https://bogazicicim.com}{\underline{bogazicicim.com}}}
+  \pointsbegin
+    \point{Course, teacher and club reviews plus a forum for Boğaziçi University students; built solo, product to infrastructure.}
+    \point{3,200+ registered users, 17,800+ course/teacher reviews and 35,000+ forum posts across 4,200 courses and 2,000 teachers.}
+    \point{Self-hosted on Hetzner behind Cloudflare, deployed with Docker and GitHub Actions via Coolify.}
+  \pointsend
+
+  \entryline{\textbf{PlanStudio} $|$ \emph{JavaScript, three.js, Docker, GitHub Actions, Cloudflare, Hetzner}}
+            {\href{https://plan.yusufanilyazici.com}{\underline{plan.yusufanilyazici.com}}}
+  \pointsbegin
+    \point{3D floor-plan tool: scan a home with Polycam, drop in the GLB, get exact per-room m\textsuperscript{2} from the scan.}
+    \point{Real-scale furniture placement with wall physics and a first-person walk mode; vanilla three.js, open source.}
+  \pointsend
+
+  \entryline{\textbf{yusufanilyazici.com} $|$ \emph{Next.js, React, TypeScript, LLM streaming, Docker, GitHub Actions}}
+            {\href{https://github.com/y4z1c1/cvsite}{\underline{github.com/y4z1c1/cvsite}}}
+  \pointsbegin
+    \point{Portfolio where an LLM persona answers as me: streaming replies, rich UI cards, chat-driven theme/language switching.}
+    \point{CI builds the container image and pushes to GHCR; Coolify pulls and redeploys automatically on every push to main.}
+  \pointsend
+
+\entriesend
+
+% ---- Skills -------------------------------------------------------------
+\section{Technical Skills}
+\begin{itemize}[leftmargin=0.15in,label={},itemsep=0pt,topsep=0pt]
+  \small\item{
+    \textbf{Languages}: Python, Java, C, C++, C\#, TypeScript, JavaScript, Solidity, Sui Move \\
+    \textbf{Frontend}: React, Vue.js, Next.js, three.js, Tailwind CSS, HTML/CSS \\
+    \textbf{Backend \& Data}: Node.js, Java Spring, Spring Boot, Django, MySQL, PostgreSQL, MongoDB, Supabase, SOAP Web Services \\
+    \textbf{Infra \& DevOps}: Docker, GitHub Actions, Cloudflare, Hetzner, Coolify \\
+    \textbf{Other}: Machine Learning, Unity, Adobe Premiere Pro, After Effects, Photoshop
+  }
+\end{itemize}
+
+\end{document}
