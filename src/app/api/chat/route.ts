@@ -5,9 +5,12 @@ import { createRateLimiter, clientIp } from '@/lib/rateLimit';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// fal any-llm model id. gemini-flash is among the cheapest with solid quality.
-// Swap to 'google/gemini-flash-1.5-8b' for even lower cost.
-const MODEL = 'google/gemini-flash-1.5';
+// fal's OpenRouter endpoint — the supported successor to the deprecated
+// `fal-ai/any-llm` (same one-prompt + system_prompt shape, same cumulative
+// streamed `output`), and without any-llm's 5000-char system_prompt cap.
+const ENDPOINT = 'openrouter/router';
+// Any OpenRouter model id works; flash-lite is fast and costs fractions of a cent per reply.
+const MODEL = 'google/gemini-2.5-flash-lite';
 
 // Abuse caps. The endpoint is public and spends a real API key, so bound both
 // how often a visitor can call it and how much text a single call can carry.
@@ -44,8 +47,8 @@ function sanitize(raw: unknown): ChatMessage[] | null {
   return bounded;
 }
 
-// Flatten chat history into a single prompt string (any-llm takes one prompt
-// + one system_prompt, not a messages array).
+// Flatten chat history into a single prompt string (the endpoint takes one
+// prompt + one system_prompt, not a messages array).
 function renderConversation(messages: ChatMessage[]): string {
   const history = messages
     .map((m) => `${m.role === 'user' ? 'Visitor' : 'Yusuf'}: ${m.content}`)
@@ -91,17 +94,11 @@ export async function POST(req: Request) {
     return Response.json({ error: 'No messages provided' }, { status: 400 });
   }
 
-  // fal rejects system_prompt over 5000 chars with an opaque 400 — this has
-  // silently broken the whole chat before when persona.ts grew. Fail loudly
-  // in the log instead of a mystery [error] in the UI.
   const systemPrompt = buildSystemPrompt();
-  if (systemPrompt.length > 4800) {
-    console.error(`chat route: system prompt is ${systemPrompt.length} chars, near fal's 5000 limit — trim persona.ts`);
-  }
 
   fal.config({ credentials: falKey });
 
-  // Stream the reply token-by-token. any-llm emits cumulative `output` per
+  // Stream the reply token-by-token. The endpoint emits cumulative `output` per
   // event, so we forward only the newly-appended delta.
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -122,7 +119,7 @@ export async function POST(req: Request) {
       };
 
       try {
-        const falStream = await fal.stream('fal-ai/any-llm', {
+        const falStream = await fal.stream(ENDPOINT, {
           input: {
             model: MODEL,
             system_prompt: systemPrompt,
