@@ -69,7 +69,9 @@ jobs:
             echo "COOLIFY_URL not set — image built & pushed. Redeploy manually in Coolify."
             exit 0
           fi
-          curl --fail --silent --show-error \
+          # Coolify's deploy endpoint is POST now (GET answers 405 since a
+          # Coolify update); uuid/force still ride as query params.
+          curl --fail --silent --show-error -X POST \
             "${COOLIFY_URL}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false" \
             -H "Authorization: Bearer ${COOLIFY_TOKEN}"
           echo "Triggered Coolify deploy."
