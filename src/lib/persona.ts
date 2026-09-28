@@ -9,7 +9,7 @@ import { PROJECTS } from './projects';
 export const CONTACT = {
   name: 'Yusuf Anıl Yazıcı',
   title: 'Computer Engineer',
-  location: 'Sarıyer, Istanbul, Turkey',
+  location: 'Şişli, Istanbul, Turkey',
   email: 'yusufanilyazici@gmail.com',
   github: 'https://github.com/y4z1c1',
   linkedin: 'https://www.linkedin.com/in/y4z1c1/',
