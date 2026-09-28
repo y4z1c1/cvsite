@@ -4,11 +4,16 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 type StageContextValue = {
   activeId: string | null;
   register: (el: HTMLElement) => () => void;
+  /** Whether the hero avatar is on screen — the chat face only shows while it isn't. */
+  heroAvatarVisible: boolean;
+  setHeroAvatarVisible: (visible: boolean) => void;
 };
 
 const StageContext = createContext<StageContextValue>({
   activeId: null,
   register: () => () => {},
+  heroAvatarVisible: true,
+  setHeroAvatarVisible: () => {},
 });
 
 export const useStageContext = () => useContext(StageContext);
@@ -23,6 +28,7 @@ const OBSERVER_OPTS: IntersectionObserverInit = {
 
 export const StageProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [heroAvatarVisible, setHeroAvatarVisible] = useState(true);
   const ioRef = useRef<IntersectionObserver | null>(null);
   // Stage components mount (and call register) before this provider's own
   // effect runs — child effects fire first — so early registrations are
@@ -95,7 +101,7 @@ export const StageProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <StageContext.Provider value={{ activeId, register }}>
+    <StageContext.Provider value={{ activeId, register, heroAvatarVisible, setHeroAvatarVisible }}>
       {children}
     </StageContext.Provider>
   );

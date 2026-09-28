@@ -8,6 +8,7 @@ import ProjectCard from './ProjectCard';
 import MessageForm from './MessageForm';
 import ChatFace from './ChatFace';
 import type { ChatMode } from '../hooks/useChatGaze';
+import { useStageContext } from '../context/StageContext';
 import { PROJECTS } from '../lib/projects';
 import { LINKS } from '../lib/links';
 import { SKILL_GROUPS, TECH_ICONS } from '../lib/career';
@@ -93,6 +94,7 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
   const { language, setLanguage } = useContext(LanguageContext);
   const { setTheme } = useTheme();
   const { t } = useTranslation();
+  const { heroAvatarVisible } = useStageContext();
 
   // The intro is rendered from t() at paint time (not captured here) so it
   // follows a later language switch.
@@ -441,7 +443,9 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
         send(input);
       }}
     >
-      <ChatFace mode={faceMode} inputLength={input.length} />
+      {/* In the open sheet the face is the one answering, so it shows even if
+          the hero avatar is still peeking out above the backdrop. */}
+      <ChatFace mode={faceMode} inputLength={input.length} visible={open || !heroAvatarVisible} />
       <input
         ref={inputRef}
         className="term-input"

@@ -19,9 +19,10 @@ const App = () => {
       <StageProvider>
         <Stages />
         <StageNav />
+        {/* inside the provider: the chat face reads whether the hero avatar is in view */}
+        <Chat open={chatOpen} onOpen={() => setChatOpen(true)} onClose={() => setChatOpen(false)} />
       </StageProvider>
       <SiteControls />
-      <Chat open={chatOpen} onOpen={() => setChatOpen(true)} onClose={() => setChatOpen(false)} />
     </main>
   );
 };
