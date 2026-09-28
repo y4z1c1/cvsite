@@ -31,6 +31,9 @@ const display = Newsreader({
   subsets: ['latin', 'latin-ext'],
   style: ['normal', 'italic'],
   axes: ['opsz'],
+  // next/font has no fallback metrics for Newsreader and warns on every
+  // build; the Georgia fallback in --font-display is close enough.
+  adjustFontFallback: false,
   variable: '--font-display-face',
   display: 'swap',
 });
