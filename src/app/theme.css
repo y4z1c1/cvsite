@@ -685,7 +685,9 @@ textarea { resize: none; }
   flex: 0 0 auto;
   display: flex;
   justify-content: center;
-  padding: 0.7rem 0;
+  /* a generous grab strip across the whole top of the sheet, not just the pill */
+  width: 100%;
+  padding: 0.95rem 0 0.8rem;
   background: transparent;
   border: none;
   border-radius: var(--radius) var(--radius) 0 0;

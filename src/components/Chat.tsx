@@ -67,6 +67,11 @@ const stripMarkers = (s: string) =>
 // (below) can't drift out of sync with the CSS transition it's waiting on.
 const SHEET_TRANSITION_MS = 300;
 
+// Sheet drag: release past this distance, or flick down faster than this,
+// and the sheet closes; anything less springs back. Same rule as iOS sheets.
+const DISMISS_DISTANCE_PX = 90;
+const DISMISS_VELOCITY_PX_MS = 0.5;
+
 // Chat-face timings: how long after the last keystroke the face still counts
 // the visitor as typing, and how long it glances at a freshly shown card.
 const TYPING_IDLE_MS = 900;
@@ -110,8 +115,14 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
   // a live 'Npx' value while the handle is being dragged.
   const [offset, setOffset] = useState(open ? '0' : '100%');
   const [dragging, setDragging] = useState(false);
+  // Mirrors `dragging` for the pointer handlers: pointermove fires before
+  // React re-renders with dragging=true, so reading state there dropped the
+  // first moves of every drag.
+  const draggingRef = useRef(false);
   const dragDeltaRef = useRef(0);
   const dragStartYRef = useRef(0);
+  // Last two pointer samples, for the release velocity (flick-to-dismiss).
+  const dragSampleRef = useRef({ y: 0, t: 0, vy: 0 });
   // True once a drag has moved past a few px — suppresses the synthetic
   // click that follows pointerup, so a drag-release doesn't also toggle
   // via the handle's own onClick.
@@ -144,28 +155,37 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
   }, [open]);
 
   const onHandlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (!open) return;
+    if (!open || e.button !== 0) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragStartYRef.current = e.clientY;
     dragDeltaRef.current = 0;
     dragMovedRef.current = false;
+    dragSampleRef.current = { y: e.clientY, t: e.timeStamp, vy: 0 };
+    draggingRef.current = true;
     setDragging(true);
   };
   const onHandlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (!dragging) return;
-    const delta = Math.max(0, e.clientY - dragStartYRef.current);
+    if (!draggingRef.current) return;
+    const raw = e.clientY - dragStartYRef.current;
+    // Follows the pointer 1:1 downward; upward it only gives a little
+    // (rubber band) so the sheet can't be pulled off its resting spot.
+    const delta = raw >= 0 ? raw : -Math.min(12, Math.sqrt(-raw) * 1.5);
     dragDeltaRef.current = delta;
-    if (delta > 4) dragMovedRef.current = true;
+    if (Math.abs(raw) > 4) dragMovedRef.current = true;
+    const s = dragSampleRef.current;
+    const dt = e.timeStamp - s.t;
+    if (dt > 0) dragSampleRef.current = { y: e.clientY, t: e.timeStamp, vy: (e.clientY - s.y) / dt };
     setOffset(`${delta}px`);
   };
   const endDrag = () => {
-    if (!dragging) return;
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
     setDragging(false);
-    // Past ~1/5 of a typical sheet height reads as an intentional dismiss;
-    // closing from here continues the same downward motion instead of
-    // snapping back to 0 first, so the drag and the close animation read as
-    // one continuous gesture.
-    if (dragDeltaRef.current > 90) onClose();
+    // Far enough, or flicked down fast enough, reads as an intentional
+    // dismiss; closing from here continues the same downward motion instead
+    // of snapping back to 0 first, so drag and close read as one gesture.
+    const flicked = dragSampleRef.current.vy > DISMISS_VELOCITY_PX_MS && dragDeltaRef.current > 10;
+    if (dragDeltaRef.current > DISMISS_DISTANCE_PX || flicked) onClose();
     else setOffset('0');
   };
   // The handle's onClick fires after pointerup regardless of drag distance —
@@ -474,11 +494,23 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
 
   return (
     <>
-      <div className={`chat-panel-backdrop${open ? ' is-visible' : ''}`} onClick={onClose} aria-hidden />
       <div
-        className={`chat-panel${offset === '0' ? ' is-open' : ''}`}
+        className={`chat-panel-backdrop${open ? ' is-visible' : ''}`}
+        onClick={onClose}
+        aria-hidden
+        // fades with the drag, fully gone ~300px down
+        style={dragging ? { opacity: Math.max(0, 1 - dragDeltaRef.current / 300), transition: 'none' } : undefined}
+      />
+      <div
+        // "Shown" means open and not parked offscreen — NOT offset === '0'.
+        // Keying it on the exact resting offset dropped the class the moment
+        // a drag began, and with transitions off mid-drag the sheet blinked
+        // out (opacity 0 + blur) under the finger.
+        className={`chat-panel${open && offset !== '100%' ? ' is-open' : ''}`}
         style={{
-          transform: `translateY(${offset}) scale(${offset === '0' ? 1 : 0.96})`,
+          // the materialize scale is for the open/close slide only; a sheet
+          // being dragged stays full size and tracks the pointer exactly
+          transform: `translateY(${offset}) scale(${offset === '100%' ? 0.96 : 1})`,
           transition: dragging ? 'none' : undefined,
         }}
       >
