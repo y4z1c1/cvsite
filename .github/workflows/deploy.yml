@@ -71,7 +71,11 @@ jobs:
           fi
           # Coolify's deploy endpoint is POST now (GET answers 405 since a
           # Coolify update); uuid/force still ride as query params.
-          curl --fail --silent --show-error -X POST \
+          # --fail-with-body: on an error, print Coolify's JSON message (e.g.
+          # "No resources found") instead of just the status code.
+          curl --fail-with-body --silent --show-error -X POST \
             "${COOLIFY_URL}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false" \
-            -H "Authorization: Bearer ${COOLIFY_TOKEN}"
+            -H "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            -H "Accept: application/json"
+          echo
           echo "Triggered Coolify deploy."
