@@ -8,7 +8,7 @@ import {
   SiCloudflare, SiHetzner, SiTailwindcss, SiC, SiCplusplus, SiSharp,
   SiUnity, SiHtml5, SiPostgresql, SiThreedotjs,
 } from 'react-icons/si';
-import { FaBriefcase, FaGraduationCap, FaChartLine } from 'react-icons/fa';
+import { FaBriefcase, FaGraduationCap, FaChartLine, FaServer } from 'react-icons/fa';
 // react-icons has no Adobe icons in the `si` set — the tabler (`tb`) set does.
 // TbApi (not the literal fa/FaSoap bar-of-soap glyph) for SOAP web services.
 import {
@@ -20,7 +20,7 @@ export type TechId =
   | 'spring' | 'spring-boot' | 'django' | 'solidity' | 'sui' | 'node'
   | 'mongodb' | 'mysql' | 'postgresql' | 'soap'
   | 'nextjs' | 'supabase' | 'docker' | 'github-actions' | 'cloudflare'
-  | 'hetzner' | 'tailwind' | 'ml' | 'threejs'
+  | 'hetzner' | 'coolify' | 'tailwind' | 'ml' | 'threejs'
   | 'c' | 'cpp' | 'csharp' | 'unity' | 'html-css'
   | 'premiere' | 'after-effects' | 'photoshop';
 
@@ -47,6 +47,7 @@ export const TECH_ICONS: Record<TechId, { label: string; Icon: IconType }> = {
   'github-actions': { label: 'GitHub Actions', Icon: SiGithubactions },
   cloudflare: { label: 'Cloudflare', Icon: SiCloudflare },
   hetzner: { label: 'Hetzner', Icon: SiHetzner },
+  coolify: { label: 'Coolify', Icon: FaServer },
   tailwind: { label: 'Tailwind CSS', Icon: SiTailwindcss },
   ml: { label: 'Machine Learning', Icon: FaChartLine },
   threejs: { label: 'three.js', Icon: SiThreedotjs },
@@ -73,7 +74,7 @@ export const SKILL_GROUPS: { id: string; label: { en: string; tr: string }; item
   {
     id: 'frontend',
     label: { en: 'Frontend', tr: 'Frontend' },
-    items: ['react', 'vue', 'nextjs', 'tailwind', 'html-css'],
+    items: ['react', 'vue', 'nextjs', 'threejs', 'tailwind', 'html-css'],
   },
   {
     id: 'backend',
@@ -88,7 +89,7 @@ export const SKILL_GROUPS: { id: string; label: { en: string; tr: string }; item
   {
     id: 'infra',
     label: { en: 'Infra & DevOps', tr: 'Altyapı & DevOps' },
-    items: ['docker', 'github-actions', 'cloudflare', 'hetzner'],
+    items: ['docker', 'github-actions', 'cloudflare', 'hetzner', 'coolify'],
   },
   {
     id: 'other',
@@ -143,7 +144,7 @@ export const EXPERIENCES: Experience[] = [
       {
         role: { en: 'Part-Time Full-Stack Developer', tr: 'Yarı Zamanlı Full-Stack Geliştirici' },
         employmentType: { en: 'Part-time', tr: 'Yarı zamanlı' },
-        date: { en: 'Oct 2025 – Aug 2026', tr: 'Ekim 2025 – Ağu 2026' },
+        date: { en: 'Oct 2025 – Aug 2026', tr: 'Eki 2025 – Ağu 2026' },
         bullets: {
           en: [
             'Full-stack web apps with Java Spring + Vue.js, part-time alongside university',
@@ -161,7 +162,7 @@ export const EXPERIENCES: Experience[] = [
     id: 'riskoptima',
     company: 'RiskOptima WealthTech Corp.',
     role: { en: 'Software Developer', tr: 'Yazılım Geliştirici' },
-    date: { en: 'Jul 2025 – Oct 2025', tr: 'Temmuz 2025 – Ekim 2025' },
+    date: { en: 'Jul 2025 – Oct 2025', tr: 'Tem 2025 – Eki 2025' },
     logoId: 'riskoptima',
     kind: 'work',
     tech: ['python', 'ml'],
@@ -182,7 +183,7 @@ export const EXPERIENCES: Experience[] = [
     id: 'suicity',
     company: 'SuiCityP2E',
     role: { en: 'Blockchain Developer', tr: 'Blockchain Geliştiricisi' },
-    date: { en: 'Aug 2024 – Jul 2025', tr: 'Ağustos 2024 – Temmuz 2025' },
+    date: { en: 'Aug 2024 – Jul 2025', tr: 'Ağu 2024 – Tem 2025' },
     logoId: 'suicity',
     kind: 'work',
     tech: ['sui', 'react', 'typescript', 'node', 'mongodb'],
@@ -202,8 +203,8 @@ export const EXPERIENCES: Experience[] = [
   {
     id: 'freelance',
     company: 'Freelance',
-    role: { en: 'Fullstack Developer', tr: 'Fullstack Geliştirici' },
-    date: { en: 'Sep 2022 – May 2024', tr: 'Eylül 2022 – Mayıs 2024' },
+    role: { en: 'Full-Stack Developer', tr: 'Full-Stack Geliştirici' },
+    date: { en: 'Sep 2022 – May 2024', tr: 'Eyl 2022 – May 2024' },
     logoId: 'freelance',
     kind: 'work',
     tech: ['react', 'solidity', 'javascript'],
@@ -222,7 +223,7 @@ export const EXPERIENCES: Experience[] = [
     id: 'bogazici',
     company: 'Boğaziçi University',
     role: { en: 'B.Sc. Computer Engineering', tr: 'Bilgisayar Mühendisliği Lisans' },
-    date: { en: 'Sep 2021 – Jun 2026', tr: 'Eylül 2021 – Haziran 2026' },
+    date: { en: 'Sep 2021 – Jun 2026', tr: 'Eyl 2021 – Haz 2026' },
     logoId: 'bogazici',
     kind: 'education',
     tech: [],
@@ -235,7 +236,7 @@ export const EXPERIENCES: Experience[] = [
     id: 'sakarya-fen',
     company: 'Sakarya Cevat Ayhan Science High School',
     role: { en: 'High School Diploma', tr: 'Lise Diploması' },
-    date: { en: 'Sep 2017 – Jun 2021', tr: 'Eylül 2017 – Haziran 2021' },
+    date: { en: 'Sep 2017 – Jun 2021', tr: 'Eyl 2017 – Haz 2021' },
     logoId: 'sakarya-fen',
     kind: 'education',
     tech: [],
