@@ -24,17 +24,17 @@ export default async function OpengraphImage() {
           alignItems: 'center',
           gap: 56,
           padding: '0 96px',
-          background: 'linear-gradient(135deg, #0b0b0d 0%, #16161a 60%, #1f2a0a 100%)',
-          color: '#ededed',
+          background: 'linear-gradient(135deg, #0f0e13 0%, #17151c 55%, #2a1a1a 100%)',
+          color: '#eee9e2',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- satori, not the DOM */}
-        <img src={avatarSrc} width={220} height={220} style={{ borderRadius: 999, border: '4px solid #d3ff4f' }} alt="" />
+        <img src={avatarSrc} width={220} height={220} style={{ borderRadius: 999, border: '4px solid #e8a0b2' }} alt="" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={{ fontSize: 76, fontWeight: 700, letterSpacing: -2 }}>{CONTACT.name}</div>
-          <div style={{ fontSize: 36, color: '#d3ff4f' }}>{CONTACT.title}</div>
-          <div style={{ fontSize: 28, color: '#8b8b90' }}>Full-stack · blockchain · ML — ask my AI twin anything</div>
-          <div style={{ fontSize: 26, color: '#8b8b90', marginTop: 12 }}>yusufanilyazici.com</div>
+          <div style={{ fontSize: 36, color: '#e8a0b2' }}>{CONTACT.title}</div>
+          <div style={{ fontSize: 28, color: '#9d978f' }}>Full-stack · blockchain · ML — ask my AI twin anything</div>
+          <div style={{ fontSize: 26, color: '#9d978f', marginTop: 12 }}>yusufanilyazici.com</div>
         </div>
       </div>
     ),

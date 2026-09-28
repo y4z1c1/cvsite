@@ -1,48 +1,59 @@
 /* ============================================================
-   Terminal Lux — refined tokens layered over monospace.css
+   Dusk — tokens layered over monospace.css
    ============================================================ */
 
 :root {
   /* fonts (CSS vars injected by next/font in layout.tsx) */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, "JetBrains Mono", monospace;
-  --font-display: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, monospace;
+  --font-display: var(--font-display-face), Georgia, "Times New Roman", serif;
 
-  --accent: #d3ff4f;
-  --accent-contrast: #0b0b0c;
-  --accent-dim: rgba(211, 255, 79, 0.16);
-  /* --accent is a *background* color only. The lime measures 1.15:1 against
-     white, so using it as a foreground (text, icons, focus rings, carets,
-     dots) is invisible in light mode — reach for these instead. Both collapse
-     back to plain --accent in dark, where the lime already has the contrast.
-       --accent-ink   text + icons        5.3:1 on --bg  (WCAG AA)
-       --accent-line  non-text UI marks   3.9:1 on --bg  (WCAG AA non-text) */
-  --accent-ink: #55700d;
-  --accent-line: #6d8c17;
+  /* One accent — burgundy. As a fill it carries light text; as a foreground
+     it works on the light paper as-is, but on the dark ink it's too deep, so
+     dark mode swaps ink/line for a lighter wine (see [data-theme="dark"]).
+       --accent-ink   text + icons        on --bg  ≥ 4.5:1 (WCAG AA)
+       --accent-line  non-text UI marks   on --bg  ≥ 3:1   (WCAG AA non-text) */
+  --accent: #7d1f37;
+  --accent-contrast: #fbf1ee;
+  --accent-dim: rgba(125, 31, 55, 0.12);
+  --accent-ink: #7d1f37;
+  --accent-line: #962b46;
+
+  /* Second accent — Glacier, the pale icy blue of the iPhone 18 Pro (whose
+     lineup is literally Burgundy + Glacier). Pale by nature, so it's used as a
+     tint/fill; anything that has to be read uses the deeper -ink, and marks
+     use -line. Used sparingly: links, dates, the visitor's chat bubbles, the
+     career-rail gradient and the aurora. */
+  --accent-2: #c5d8e7;
+  --accent-2-dim: rgba(150, 188, 216, 0.26);
+  --accent-2-ink: #2f5d7c;
+  --accent-2-line: #5a8cb0;
 
   /* ---- glass (see .glass in stages.css) ----
-     alpha stays >= .5 so text keeps contrast against whatever mesh color
+     alpha stays >= .5 so text keeps contrast against whatever aurora color
      drifts underneath; saturate() alongside the blur is what keeps light-mode
      glass from reading as flat grey. */
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-bg-strong: rgba(255, 255, 255, 0.74);
+  --glass-bg: rgba(255, 253, 249, 0.58);
+  --glass-bg-strong: rgba(255, 253, 249, 0.76);
   --glass-blur: 18px;
-  --glass-sat: 180%;
-  --glass-ring: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  --glass-shadow: 0 10px 40px rgba(20, 20, 30, 0.10);
+  --glass-sat: 160%;
+  --glass-ring: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(60, 40, 30, 0.07);
+  --glass-shadow: 0 10px 40px rgba(60, 40, 30, 0.08);
 
-  /* ---- stage hues + mesh ---- */
-  --hue-lime: #d3ff4f;
-  --hue-violet: #8b5cf6;
-  --hue-cyan: #22d3ee;
-  --hue-amber: #fbbf24;
-  --hue-rose: #fb7185;
+  /* ---- stage hues + aurora ----
+     A dusk palette — wine, glacier, iris, rose, honey — softer and more related
+     to each other than the old electric lime/cyan/violet rainbow. */
+  --hue-wine: #b0405e;
+  --hue-violet: #8e80f2;
+  --hue-glacier: #a9c8de;
+  --hue-amber: #efc27a;
+  --hue-rose: #ec8fa8;
   --grain-alpha: 0.035;
 
   /* one uniform corner radius everywhere */
-  --radius: 8px;
+  --radius: 10px;
   --radius-sm: 8px;
-  --radius-pill: 8px;
+  --radius-pill: 999px;
 
   /* one spacing scale for section/card/form rhythm — pick from this instead
      of one-off rem values so gaps stay visually consistent across the page */
@@ -51,18 +62,18 @@
   --space-3: 1rem;
   --space-4: 1.5rem;
 
-  /* light (default) */
-  --bg: #f7f7f5;
-  --surface: #ffffff;
-  --surface-alt: #efefec;
-  --border: rgba(0, 0, 0, 0.10);
-  --border-strong: rgba(0, 0, 0, 0.20);
-  --text: #16161a;
-  --muted: #6b6b70;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 14px 34px rgba(0, 0, 0, 0.09);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --term-bg: #f5f5f2;
-  --term-boot: #3b6fd4;
+  /* light (default) — warm paper, not clinical grey */
+  --bg: #f7f3ee;
+  --surface: #fffdf9;
+  --surface-alt: #efeae3;
+  --border: rgba(40, 28, 20, 0.10);
+  --border-strong: rgba(40, 28, 20, 0.20);
+  --text: #1d1a1f;
+  --muted: #6b655f;
+  --shadow: 0 1px 2px rgba(40, 28, 20, 0.05), 0 14px 34px rgba(40, 28, 20, 0.08);
+  --shadow-sm: 0 1px 2px rgba(40, 28, 20, 0.06);
+  --term-bg: #f5f1eb;
+  --term-boot: #4a5fc1;
 
   /* remap legacy vars used by existing inline styles */
   --text-color: var(--text);
@@ -75,26 +86,36 @@
 }
 
 [data-theme="dark"] {
-  --bg: #0b0b0c;
-  --surface: #141417;
-  --surface-alt: #1c1c20;
-  --border: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.22);
-  --text: #ededed;
-  --muted: #8b8b90;
+  /* ink with a hint of violet, and warm off-white text */
+  --bg: #0f0e13;
+  --surface: #17151c;
+  --surface-alt: #1f1c25;
+  --border: rgba(255, 244, 232, 0.09);
+  --border-strong: rgba(255, 244, 232, 0.20);
+  --text: #eee9e2;
+  --muted: #9d978f;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --term-bg: #0b0b0d;
-  --term-boot: #8ab4ff;
+  --term-bg: #0f0e13;
+  --term-boot: #a9b4ff;
 
-  --glass-bg: rgba(22, 22, 26, 0.55);
-  --glass-bg-strong: rgba(22, 22, 26, 0.74);
-  --glass-ring: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(255, 255, 255, 0.10);
+  --glass-bg: rgba(24, 22, 30, 0.56);
+  --glass-bg-strong: rgba(24, 22, 30, 0.76);
+  --glass-ring: inset 0 1px 0 rgba(255, 244, 232, 0.06), 0 0 0 1px rgba(255, 244, 232, 0.09);
   --glass-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
   --grain-alpha: 0.05;
 
-  --accent-ink: var(--accent);
-  --accent-line: var(--accent);
+  /* a slightly brighter burgundy fill so it doesn't sink into the ink, and a
+     light wine for anything burgundy that has to be *read* on dark */
+  --accent: #9a2c49;
+  --accent-dim: rgba(224, 138, 160, 0.14);
+  --accent-ink: #e8a0b2;
+  --accent-line: #d9859b;
+
+  /* glacier is light enough to be read directly on the dark ink */
+  --accent-2-dim: rgba(197, 216, 231, 0.13);
+  --accent-2-ink: #c5d8e7;
+  --accent-2-line: #9fc0da;
 
   color-scheme: dark;
 }
@@ -116,6 +137,10 @@ body {
 }
 body {
   font-family: var(--font-sans);
+  /* monospace.css turns on tabular-nums globally; in Schibsted Grotesk that
+     also makes . and , tabular-width ("Vue . js"). Proportional by default,
+     tabular only where columns of numbers need it (project stats). */
+  font-variant-numeric: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-width: none;            /* let the app center its own column */
@@ -133,7 +158,7 @@ main p {
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   text-transform: none;
   letter-spacing: -0.01em;
 }
@@ -211,8 +236,9 @@ textarea { resize: none; }
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.85rem;
   line-height: 1.2;
   padding: 0.42rem 0.82rem;
   border-radius: var(--radius-pill);
@@ -271,7 +297,7 @@ textarea { resize: none; }
   display: flex;
   flex-direction: column;
   padding: 0 1rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   cursor: text;
 }
 .spot-messages {
@@ -385,12 +411,15 @@ textarea { resize: none; }
   border: 1px solid var(--border);
 }
 .msg-bubble-user {
-  background: var(--accent-dim);
+  /* the visitor speaks in glacier, the persona in neutral — easy to tell apart */
+  background: var(--accent-2-dim);
 }
 .msg-bubble-system {
   background: transparent;
   border: 1px dashed var(--border);
-  font-size: 0.88rem;
+  /* command output (help, skills…) keeps the terminal voice */
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
 }
 .msg-bubble-rich {
   background: var(--surface);
@@ -533,7 +562,7 @@ textarea { resize: none; }
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 400;
-  color: var(--accent-ink);
+  color: var(--accent-2-ink);
   text-decoration: none;
 }
 .project-link:hover { text-decoration: underline; }
@@ -559,6 +588,7 @@ textarea { resize: none; }
   gap: 0.05rem;
 }
 .project-stat-value {
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
   font-size: 0.95rem;
 }
@@ -835,7 +865,7 @@ textarea { resize: none; }
 .md ul { list-style: disc; }
 .md ol { list-style: decimal; }
 .md li { margin: 0.15em 0; }
-.md a { color: var(--accent-ink); }
+.md a { color: var(--accent-2-ink); }
 .md strong { font-weight: 700; }
 .md code {
   font-family: var(--font-mono);
