@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useStageContext } from '../context/StageContext';
 import { useCursorDirection } from '../hooks/useCursorDirection';
 import AvatarStack from './AvatarStack';
@@ -16,7 +16,21 @@ type Props = { alt: string };
  */
 const AvatarTracker = ({ alt }: Props) => {
   const stackRef = useRef<HTMLSpanElement>(null);
-  const { activeId } = useStageContext();
+  const { activeId, setHeroAvatarVisible } = useStageContext();
+
+  // Report whether the face is actually on screen (not just whether the hero
+  // stage is "active") — the chat bar's face takes over the moment this one
+  // scrolls out of view.
+  useEffect(() => {
+    const el = stackRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([entry]) => setHeroAvatarVisible(entry.isIntersecting));
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      setHeroAvatarVisible(false);
+    };
+  }, [setHeroAvatarVisible]);
 
   // Only track while the hero is the stage in view — reuses the single
   // IntersectionObserver in StageContext instead of adding another. `null` is

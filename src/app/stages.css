@@ -537,6 +537,18 @@ html {
   height: 34px;
   border-radius: 50%;
   box-shadow: 0 0 0 1px var(--border);
+  transition: width 0.35s cubic-bezier(0.22, 0.61, 0.36, 1), margin 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+/* Collapsed while the hero avatar is in view: zero width plus a negative
+   margin that cancels the row's 0.6rem gap, so the input doesn't jump. */
+.chat-face[data-visible="false"] {
+  width: 0;
+  margin-right: -0.6rem;
+  opacity: 0;
+  transform: scale(0.4) translateY(6px);
+  box-shadow: none;
+  pointer-events: none;
 }
 .chat-face .avatar-stack {
   width: 100%;
@@ -553,6 +565,7 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .chat-face .avatar-stack { transform: none; }
   .chat-face[data-mode="thinking"] { animation: none; }
+  .chat-face { transition: none; }
 }
 .hero-scroll-hint {
   display: inline-flex;

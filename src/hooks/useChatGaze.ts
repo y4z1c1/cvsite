@@ -25,6 +25,8 @@ export function useChatGaze(
   ref: React.RefObject<HTMLElement>,
   mode: ChatMode,
   inputLength: number,
+  /** False while the face is collapsed — no listeners, no timers. */
+  active = true,
 ): FrameKey {
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
@@ -32,15 +34,15 @@ export function useChatGaze(
   }, []);
 
   // Always called (hooks can't be conditional); it only listens while idle.
-  const cursorFrame = useCursorDirection(ref, mode === 'idle' && !reduceMotion);
+  const cursorFrame = useCursorDirection(ref, active && mode === 'idle' && !reduceMotion);
 
   const [thinkIndex, setThinkIndex] = useState(0);
   useEffect(() => {
-    if (mode !== 'thinking' || reduceMotion) return;
+    if (!active || mode !== 'thinking' || reduceMotion) return;
     setThinkIndex(0);
     const id = setInterval(() => setThinkIndex((i) => (i + 1) % THINK_FRAMES.length), THINK_STEP_MS);
     return () => clearInterval(id);
-  }, [mode, reduceMotion]);
+  }, [active, mode, reduceMotion]);
 
   if (reduceMotion) return 'c';
   switch (mode) {
