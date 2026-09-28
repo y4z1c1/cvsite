@@ -1,7 +1,9 @@
 'use client';
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 type Language = 'en' | 'tr';
+
+const STORAGE_KEY = 'lang';
 
 type LanguageContextType = {
     language: Language;
@@ -14,7 +16,26 @@ export const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [language, setLanguage] = useState<Language>('en');
+    const [language, setLanguageState] = useState<Language>('en');
+
+    // First paint is always EN (it's what the server rendered); afterwards
+    // adopt a saved choice, or a Turkish browser. Storage can throw (private
+    // mode, blocked site data), in which case this just stays EN.
+    useEffect(() => {
+        let saved: string | null = null;
+        try {
+            saved = localStorage.getItem(STORAGE_KEY);
+        } catch {}
+        if (saved === 'en' || saved === 'tr') setLanguageState(saved);
+        else if (navigator.language?.toLowerCase().startsWith('tr')) setLanguageState('tr');
+    }, []);
+
+    const setLanguage = useCallback((lang: Language) => {
+        setLanguageState(lang);
+        try {
+            localStorage.setItem(STORAGE_KEY, lang);
+        } catch {}
+    }, []);
 
     // <html lang> is hardcoded "en" in layout.tsx and never follows the
     // in-chat language toggle — this keeps screen readers pronouncing the

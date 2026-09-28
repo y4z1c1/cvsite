@@ -451,19 +451,25 @@ html {
   color: var(--muted);
 }
 
+/* ---- education stage: every school on one page ---- */
+.edu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+.edu-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.stage .exp-role.edu-role-minor { font-size: clamp(1.25rem, 3vw, 2rem); }
+
 /* ---- hero stage ---- */
 .hero-stage-top {
   display: flex;
   align-items: center;
   gap: var(--space-4);
   flex-wrap: wrap;
-}
-.hero-avatar-lg {
-  width: clamp(72px, 12vw, 128px);
-  height: clamp(72px, 12vw, 128px);
-  border-radius: 50%;
-  object-fit: cover;
-  flex: 0 0 auto;
 }
 .hero-avatar-ring {
   position: relative;
@@ -492,8 +498,6 @@ html {
 .avatar-stack {
   position: relative;
   display: block;
-  width: clamp(72px, 12vw, 128px);
-  height: clamp(72px, 12vw, 128px);
   flex: 0 0 auto;
   border-radius: 50%;
   transform: perspective(600px)
@@ -504,11 +508,17 @@ html {
 /* Frames swap instantly — no opacity crossfade. Each frame was generated with
    its own framing, so fading between them ghosts two heads at slightly
    different positions; a hard cut reads as a head snapping to look at you. */
+.avatar-stack-hero {
+  width: clamp(72px, 12vw, 128px);
+  height: clamp(72px, 12vw, 128px);
+}
 .avatar-frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
   opacity: 0;
   user-select: none;
   -webkit-user-drag: none;
@@ -517,6 +527,32 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   .avatar-stack { transform: none; transition: none; }
+}
+
+/* ---- the chat face (ChatFace.tsx): same frames, left end of the input row ----
+   Smaller tilt than the hero — at 34px the full 7deg reads as a wobble. */
+.chat-face {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.chat-face .avatar-stack {
+  width: 100%;
+  height: 100%;
+  transform: perspective(300px)
+    rotateY(calc(var(--ax, 0) * 4deg))
+    rotateX(calc(var(--ay, 0) * -3deg));
+}
+/* thinking: a soft pulse on the ring so the "hmm" reads even mid-glance */
+.chat-face[data-mode="thinking"] { animation: chat-face-think 1.4s ease-in-out infinite; }
+@keyframes chat-face-think {
+  50% { box-shadow: 0 0 0 2px var(--accent-line); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-face .avatar-stack { transform: none; }
+  .chat-face[data-mode="thinking"] { animation: none; }
 }
 .hero-scroll-hint {
   display: inline-flex;
@@ -713,4 +749,44 @@ html {
 }
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
   .stage-nav-progress-fill { transition: none; }
+}
+
+/* ---- language + theme switch (SiteControls.tsx) ---- */
+.site-controls {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-pill);
+}
+.site-controls-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.site-controls-btn:hover { color: var(--text); background: var(--border); }
+.site-controls-btn:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 1px; }
+.site-controls-btn [data-active="true"] { color: var(--text); font-weight: 600; }
+.site-controls-sep { width: 1px; height: 1rem; background: var(--border); }
+.site-controls-icon-slot { display: inline-block; width: 13px; height: 13px; }
+@media (max-width: 768px) {
+  /* clears the 2px progress hairline pinned to the top edge */
+  .site-controls { top: 0.6rem; right: 0.6rem; }
 }
