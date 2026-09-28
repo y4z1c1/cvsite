@@ -105,7 +105,7 @@ const Stages = () => {
       >
         <p className="stage-lede">{t('messageIntro')}</p>
         <div className="ov-card glass">
-          <MessageForm variant="section" />
+          <MessageForm />
         </div>
       </Stage>
     </div>

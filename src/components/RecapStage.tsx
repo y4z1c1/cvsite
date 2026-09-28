@@ -2,14 +2,10 @@
 import { FaGraduationCap, FaCode } from 'react-icons/fa';
 import { EXPERIENCES, SKILL_GROUPS, TECH_ICONS } from '../lib/career';
 import { PROJECTS } from '../lib/projects';
+import { goTo } from '../lib/scroll';
 import CompanyLogo from './CompanyLogo';
 
 type Props = { language: 'en' | 'tr' };
-
-const goTo = (id: string) => {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-};
 
 // An Apple-keynote-style "recap" grid — one small card per stage above, click
 // any card to jump back to it. Every child here is a jump-back button and

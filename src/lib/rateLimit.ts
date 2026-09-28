@@ -21,8 +21,16 @@ export function createRateLimiter(opts: { limit: number; windowMs: number }) {
   };
 }
 
+// The FIRST x-forwarded-for entry is whatever the client sent, so keying on it
+// let anyone reset their window with a spoofed header. Prefer the header
+// Cloudflare sets itself (and overwrites if a client sends one), then the
+// proxy-set x-real-ip, then the LAST XFF hop — the one our own proxy appended.
 export function clientIp(req: Request): string {
+  const cf = req.headers.get('cf-connecting-ip');
+  if (cf) return cf.trim();
+  const real = req.headers.get('x-real-ip');
+  if (real) return real.trim();
   const fwd = req.headers.get('x-forwarded-for');
-  if (fwd) return fwd.split(',')[0].trim();
-  return req.headers.get('x-real-ip') ?? 'unknown';
+  if (fwd) return fwd.split(',').pop()!.trim();
+  return 'unknown';
 }

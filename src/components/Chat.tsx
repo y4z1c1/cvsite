@@ -8,8 +8,11 @@ import ProjectCard from './ProjectCard';
 import MessageForm from './MessageForm';
 import { PROJECTS } from '../lib/projects';
 import { LINKS } from '../lib/links';
+import { SKILL_GROUPS, TECH_ICONS } from '../lib/career';
+import { translations } from '../translations';
 
 type Line =
+  | { kind: 'intro' }
   | { kind: 'system'; text: string }
   | { kind: 'user'; text: string }
   | { kind: 'assistant'; text: string }
@@ -38,17 +41,33 @@ const Anil = () => (
 );
 
 // Loose keyword matching for chat-driven quick actions — not full NLU, just
-// enough to catch "dark mode", "koyu tema", "türkçeye geç", "show me your
-// career", "bogazicicim" etc. locally without an LLM round-trip.
-// \w* tails absorb Turkish suffixes ("temaya", "moda", "karanlığa").
-const DARK_RE = /\b(dark|koyu|karanlı[kğ]\w*)/i;
-const LIGHT_RE = /\b(light|açık|aydınlık)/i;
-const THEME_WORD_RE = /\b(theme|mode|tema\w*|mod\w*)/i;
-const TURKISH_RE = /\b(türkçe|turkish)\b/i;
-const ENGLISH_RE = /\b(english|ingilizce)\b/i;
-const CAREER_RE = /\b(experience|career|work history|your work|jobs?|deneyim(ler(in)?)?|kariyer(in)?|iş geçmişi|işler(in)?|çalışmaların|riskoptima|turkish technology|suicity)\b/i;
-const PROJECTS_RE = /\b(projects?|projeler(in)?|proje|bo[gğ]azi[cç]i ?[cç]im|bogazicicim)\b/i;
-const MESSAGE_RE = /\b(leave\s+(you\s+)?(a\s+)?message|get in touch|contact you|reach (out|you)|send you a message|mesaj b[ıi]rak\w*|ile[tş]im\w*|sana ulaş\w*)\b/i;
+// enough to catch "dark mode", "koyu tema", "türkçeye geç", "experience",
+// "bogazicicim" etc. locally without an LLM round-trip.
+//
+// Only SHORT, command-like inputs are handled here (see isCommandLike).
+// Anything that reads like a real question goes to the model, which can still
+// trigger the same actions via [[show:...]] / [[set:...]] markers — otherwise
+// "what was your experience with React?" got a canned timeline card and
+// "lightweight ML models" flipped the theme.
+//
+// JS \b is ASCII-only, so it misfires around Turkish letters (ı, ç, ş…);
+// these use Unicode letter lookarounds instead. \p{L}* tails absorb Turkish
+// suffixes ("temaya", "moda", "karanlığa").
+const word = (alts: string) => new RegExp(`(?<!\\p{L})(?:${alts})(?!\\p{L})`, 'iu');
+const DARK_RE = word('dark|koyu|karanl[ıi][kğ]\\p{L}*');
+const LIGHT_RE = word('light|açık|aydınlık\\p{L}*');
+const THEME_WORD_RE = word('theme|mode|tema\\p{L}*|mod|moda|modu|moduna|modda');
+const TURKISH_RE = word('türkçe\\p{L}*|turkish');
+const ENGLISH_RE = word('english|ingilizce\\p{L}*');
+// "do you speak turkish" is a question about me, not a request to switch.
+const LANG_QUESTION_RE = word('speak|know|konuş\\p{L}*|biliyor\\p{L}*');
+const CAREER_RE = word('experience|career|work history|jobs?|deneyim\\p{L}*|kariyer\\p{L}*|iş geçmişi\\p{L}*');
+const PLANSTUDIO_RE = word('plan ?studio');
+const PROJECTS_RE = word('projects?|proje\\p{L}*|bo[gğ]azi[cç]i ?[cç]im|bogazicicim');
+const MESSAGE_RE = word('leave (you )?(a )?message|get in touch|contact( you)?|mesaj b[ıi]rak\\p{L}*|ileti[sş]im\\p{L}*');
+
+const COMMAND_MAX_WORDS = 4;
+const isCommandLike = (s: string) => !s.includes('?') && s.split(/\s+/).length <= COMMAND_MAX_WORDS;
 
 // The LLM can request UI actions by ending its reply with [[show:...]] or
 // [[set:...]] tokens (see persona.ts "UI actions"). Markers are stripped from
@@ -67,7 +86,9 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
   const { setTheme } = useTheme();
   const { t } = useTranslation();
 
-  const [lines, setLines] = useState<Line[]>([{ kind: 'assistant', text: t('chatIntro') }]);
+  // The intro is rendered from t() at paint time (not captured here) so it
+  // follows a later language switch.
+  const [lines, setLines] = useState<Line[]>([{ kind: 'intro' }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -202,28 +223,67 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
     // toLowerCase mangles the dotted İ).
     const trCmd = raw.trim().toLocaleLowerCase('tr-TR');
 
+    switch (cmd) {
+      case 'help':
+        print({ kind: 'system', text: t('chatHelp') });
+        return true;
+      case 'about':
+        print({ kind: 'system', text: t('chatAbout') });
+        return true;
+      case 'skills':
+        print({
+          kind: 'system',
+          text: SKILL_GROUPS.map(
+            (g) => `${g.label[language].toLowerCase()}: ${g.items.map((id) => TECH_ICONS[id].label).join(' · ')}`,
+          ).join('\n'),
+        });
+        return true;
+      case 'message':
+      case 'contact':
+        print({ kind: 'message' });
+        return true;
+      case 'clear':
+        setLines([{ kind: 'intro' }]);
+        return true;
+      case 'cv':
+      case 'github':
+      case 'linkedin':
+      case 'email':
+        print({ kind: 'system', text: `${t('chatOpening')} ${cmd}…` });
+        // mailto: in a new tab just leaves an empty tab behind once the mail
+        // client takes over; navigate in place instead.
+        if (cmd === 'email') window.location.href = LINKS.email;
+        else window.open(LINKS[cmd], '_blank', 'noopener');
+        return true;
+    }
+
+    if (!isCommandLike(trCmd)) return false;
+
     if (THEME_WORD_RE.test(trCmd) && DARK_RE.test(trCmd)) {
       setTheme('dark');
-      print({ kind: 'system', text: language === 'tr' ? 'karanlık moda geçildi.' : 'switched to dark mode.' });
+      print({ kind: 'system', text: t('chatDark') });
       return true;
     }
     if (THEME_WORD_RE.test(trCmd) && LIGHT_RE.test(trCmd)) {
       setTheme('light');
-      print({ kind: 'system', text: language === 'tr' ? 'aydınlık moda geçildi.' : 'switched to light mode.' });
+      print({ kind: 'system', text: t('chatLight') });
       return true;
     }
-    if (TURKISH_RE.test(trCmd)) {
-      setLanguage('tr');
-      print({ kind: 'system', text: 'türkçeye geçildi.' });
-      return true;
-    }
-    if (ENGLISH_RE.test(trCmd)) {
-      setLanguage('en');
-      print({ kind: 'system', text: 'switched to english.' });
-      return true;
+    if (!LANG_QUESTION_RE.test(trCmd)) {
+      const target = TURKISH_RE.test(trCmd) ? 'tr' : ENGLISH_RE.test(trCmd) ? 'en' : null;
+      if (target) {
+        setLanguage(target);
+        // t() still resolves against the old language during this render.
+        print({ kind: 'system', text: translations[target].chatLangSwitched });
+        return true;
+      }
     }
     if (CAREER_RE.test(trCmd)) {
       print({ kind: 'timeline' });
+      return true;
+    }
+    if (PLANSTUDIO_RE.test(trCmd)) {
+      print({ kind: 'project', id: 'planstudio' });
       return true;
     }
     if (PROJECTS_RE.test(trCmd)) {
@@ -234,41 +294,7 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
       print({ kind: 'message' });
       return true;
     }
-
-    switch (cmd) {
-      case 'help':
-        print({
-          kind: 'system',
-          text:
-            'commands: help · about · skills · experience · projects · message · cv · github · linkedin · email · clear\nor just ask me anything in plain english / türkçe.',
-        });
-        return true;
-      case 'about':
-        print({
-          kind: 'system',
-          text: 'computer engineer · sariyer, istanbul. graduated from boğaziçi university (june 2026). full-stack, blockchain & ml.',
-        });
-        return true;
-      case 'skills':
-        print({ kind: 'system', text: 'python · java · typescript · react · move · solidity · django' });
-        return true;
-      case 'message':
-      case 'contact':
-        print({ kind: 'message' });
-        return true;
-      case 'clear':
-        setLines([{ kind: 'assistant', text: t('chatIntro') }]);
-        return true;
-      case 'cv':
-      case 'github':
-      case 'linkedin':
-      case 'email':
-        print({ kind: 'system', text: `opening ${cmd}…` });
-        if (typeof window !== 'undefined') window.open(LINKS[cmd], '_blank');
-        return true;
-      default:
-        return false;
-    }
+    return false;
   };
 
   const send = async (text: string) => {
@@ -434,6 +460,14 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
                   </div>
                 );
               }
+              if (l.kind === 'intro') {
+                return (
+                  <div className="msg-row msg-row-assistant msg-in" key={i}>
+                    <Anil />
+                    <div className="msg-bubble msg-bubble-assistant">{t('chatIntro')}</div>
+                  </div>
+                );
+              }
               if (l.kind === 'assistant') {
                 return (
                   <div className="msg-row msg-row-assistant msg-in" key={i}>
@@ -476,7 +510,6 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
                     <Anil />
                     <div className="msg-bubble msg-bubble-rich">
                       <MessageForm
-                        variant="inline"
                         onSuccess={() => print({ kind: 'system', text: t('messageSentInChat') })}
                       />
                     </div>

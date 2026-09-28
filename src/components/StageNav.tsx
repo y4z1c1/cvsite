@@ -5,6 +5,7 @@ import { LanguageContext } from '../context/LanguageContext';
 import { useStageContext } from '../context/StageContext';
 import { EXPERIENCES } from '../lib/career';
 import { PROJECTS } from '../lib/projects';
+import { goTo } from '../lib/scroll';
 
 type CareerNode = {
   id: string;
@@ -40,11 +41,6 @@ const STAGE_ORDER = [
   ...CAREER_NODES.map((n) => n.id),
   ...PLAIN_STAGES.slice(1).map((s) => s.id),
 ];
-
-const goTo = (id: string) => {
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-};
 
 // The right-hand dot rail. Every stage gets a plain dot except the career
 // cluster (jobs + education): while the visitor is anywhere in that run of

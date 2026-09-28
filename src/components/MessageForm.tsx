@@ -1,10 +1,10 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { FaEnvelope, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import { useTranslation } from '../hooks/useTranslation';
 
-type Props = { variant: 'section' | 'inline'; onSuccess?: () => void };
-type Status = 'idle' | 'submitting' | 'success' | 'error' | 'rate-limited';
+type Props = { onSuccess?: () => void };
+type Status = 'idle' | 'submitting' | 'success' | 'error' | 'rate-limited' | 'invalid-email';
 
 // How long the success icon lingers before the card turns back into a form
 // (so a visitor can send a second message without a reload).
@@ -12,6 +12,9 @@ const SUCCESS_REVERT_MS = 4000;
 
 const MessageForm = ({ onSuccess }: Props) => {
   const { t } = useTranslation();
+  // The form can be on screen twice (contact stage + a chat card), so the
+  // honeypot's label/input pairing needs a per-instance id.
+  const hpId = useId();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -37,6 +40,11 @@ const MessageForm = ({ onSuccess }: Props) => {
         setStatus('rate-limited');
         return;
       }
+      // The only 400 a well-formed submit can hit is the server rejecting the email.
+      if (res.status === 400 && (await res.json().catch(() => null))?.error === 'Invalid email') {
+        setStatus('invalid-email');
+        return;
+      }
       if (!res.ok) {
         setStatus('error');
         return;
@@ -60,7 +68,8 @@ const MessageForm = ({ onSuccess }: Props) => {
       status === 'submitting' ? t('messageSending')
         : status === 'success' ? t('messageSuccess')
           : status === 'rate-limited' ? t('messageRateLimited')
-            : t('messageError');
+            : status === 'invalid-email' ? t('messageInvalidEmail')
+              : t('messageError');
 
     return (
       <div className="mf-feedback" data-status={status}>
@@ -107,9 +116,9 @@ const MessageForm = ({ onSuccess }: Props) => {
       {/* Honeypot: a real (not type="hidden") field, visually hidden via CSS.
           Bots that indiscriminately fill every input still get caught. */}
       <div className="mf-hp" aria-hidden="true">
-        <label htmlFor="mf-company">Company</label>
+        <label htmlFor={hpId}>Company</label>
         <input
-          id="mf-company"
+          id={hpId}
           name="company"
           tabIndex={-1}
           autoComplete="off"
