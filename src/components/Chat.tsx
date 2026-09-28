@@ -25,23 +25,6 @@ type Line =
 
 type Props = { open: boolean; onOpen: () => void; onClose: () => void };
 
-const Anil = () => (
-  // eslint-disable-next-line @next/next/no-img-element
-  <img
-    src="/avatar/pp-c-sm.webp"
-    alt="anıl"
-    width={30}
-    height={30}
-    style={{
-      width: 30,
-      height: 30,
-      borderRadius: '50%',
-      objectFit: 'cover',
-      border: '1px solid var(--border)',
-      flex: '0 0 auto',
-    }}
-  />
-);
 
 // Loose keyword matching for chat-driven quick actions — not full NLU, just
 // enough to catch "dark mode", "koyu tema", "türkçeye geç", "experience",
@@ -194,6 +177,18 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
     }
     onClose();
   };
+
+  // One face on screen at a time: while the sheet is open the input row's
+  // face is the one answering, so the hero avatar fades out behind it (see
+  // html[data-chat="open"] in stages.css). The bubbles carry no avatar at all.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (open) root.dataset.chat = 'open';
+    else delete root.dataset.chat;
+    return () => {
+      delete root.dataset.chat;
+    };
+  }, [open]);
 
   // Escape closes the sheet; body scroll stays locked for as long as it's
   // mounted (including the closing animation) so the overview can't scroll
@@ -513,7 +508,6 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
               if (l.kind === 'intro') {
                 return (
                   <div className="msg-row msg-row-assistant msg-in" key={i}>
-                    <Anil />
                     <div className="msg-bubble msg-bubble-assistant">{t('chatIntro')}</div>
                   </div>
                 );
@@ -521,7 +515,6 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
               if (l.kind === 'assistant') {
                 return (
                   <div className="msg-row msg-row-assistant msg-in" key={i}>
-                    <Anil />
                     <div className="msg-bubble msg-bubble-assistant">
                       {l.text}
                       {lastIsStreamingAssistant(i) && <span className="cursor" />}
@@ -535,7 +528,6 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
               if (l.kind === 'timeline') {
                 return (
                   <div className="msg-row msg-row-assistant msg-in" key={i}>
-                    <Anil />
                     <div className="msg-bubble msg-bubble-rich">
                       <CareerTimeline language={language} />
                     </div>
@@ -547,7 +539,6 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
                 if (!project) return null;
                 return (
                   <div className="msg-row msg-row-assistant msg-in" key={i}>
-                    <Anil />
                     <div className="msg-bubble msg-bubble-rich">
                       <ProjectCard project={project} language={language} />
                     </div>
@@ -557,7 +548,6 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
               if (l.kind === 'message') {
                 return (
                   <div className="msg-row msg-row-assistant msg-in" key={i}>
-                    <Anil />
                     <div className="msg-bubble msg-bubble-rich">
                       <MessageForm
                         onSuccess={() => print({ kind: 'system', text: t('messageSentInChat') })}

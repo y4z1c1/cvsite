@@ -24,7 +24,7 @@ export function AuroraBackground({ className, showRadialGradient = true }: Auror
         style={
           {
             '--aurora':
-              'repeating-linear-gradient(100deg,var(--hue-lime) 10%,var(--hue-cyan) 15%,var(--hue-violet) 20%,var(--hue-rose) 25%,var(--hue-amber) 30%)',
+              'repeating-linear-gradient(100deg,var(--hue-wine) 10%,var(--hue-glacier) 15%,var(--hue-violet) 20%,var(--hue-rose) 25%,var(--hue-amber) 30%)',
             '--dark-gradient':
               'repeating-linear-gradient(100deg,var(--bg) 0%,var(--bg) 7%,transparent 10%,transparent 12%,var(--bg) 16%)',
             '--white-gradient':

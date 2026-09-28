@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useStageContext } from '../context/StageContext';
 
-export type StageHue = 'lime' | 'violet' | 'cyan' | 'amber' | 'rose';
+export type StageHue = 'wine' | 'violet' | 'glacier' | 'amber' | 'rose';
 
 type Props = {
   id: string;

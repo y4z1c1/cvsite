@@ -84,14 +84,14 @@ html {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(60vmax 45vmax at 50% 40%, var(--stage-hue, var(--hue-lime)), transparent 65%);
+  background: radial-gradient(60vmax 45vmax at 50% 40%, var(--stage-hue, var(--hue-wine)), transparent 65%);
   opacity: 0;
   transition: opacity 0.8s ease;
 }
 .stage.is-in::before { opacity: 0.16; }
-.stage[data-hue="lime"]   { --stage-hue: var(--hue-lime); }
+.stage[data-hue="wine"]   { --stage-hue: var(--hue-wine); }
 .stage[data-hue="violet"] { --stage-hue: var(--hue-violet); }
-.stage[data-hue="cyan"]   { --stage-hue: var(--hue-cyan); }
+.stage[data-hue="glacier"] { --stage-hue: var(--hue-glacier); }
 .stage[data-hue="amber"]  { --stage-hue: var(--hue-amber); }
 .stage[data-hue="rose"]   { --stage-hue: var(--hue-rose); }
 
@@ -234,10 +234,9 @@ html {
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent-ink);
   margin: 0;
 }
-[data-theme="dark"] .stage-kicker { color: var(--accent); }
 .stage p, .stage li {
   font-family: var(--font-sans);
   font-size: clamp(0.95rem, 1.5vw, 1.1rem);
@@ -301,12 +300,12 @@ html {
 .stage .glass-card {
   padding: var(--space-4);
 }
-/* the copy-for-AI hero chip pops lime + a quick scale on success, echoing
+/* the copy-for-AI hero chip pops the accent fill + a quick scale on success, echoing
    the send button's accent instead of introducing a new color */
 .hero-links .chip[data-copied="true"],
 /* the pointer is still on the chip the moment it flips to "copied", so the
    generic .chip:hover colors have to be beaten here or the label and tick
-   render in hover ink on the lime fill */
+   render in hover ink on the accent fill */
 .hero-links .chip[data-copied="true"]:hover {
   color: var(--accent-contrast);
   background: var(--accent);
@@ -355,7 +354,8 @@ html {
   color: var(--accent-ink);
 }
 .recap-card-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-weight: 500;
   font-size: 0.88rem;
   color: var(--text);
@@ -387,8 +387,9 @@ html {
 .exp-date {
   font-family: var(--font-mono);
   font-size: 0.78rem;
-  color: var(--muted);
-  border: 1px solid var(--border);
+  color: var(--accent-2-ink);
+  background: var(--accent-2-dim);
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
   padding: 0.15rem 0.6rem;
   white-space: nowrap;
@@ -512,6 +513,9 @@ html {
   width: clamp(72px, 12vw, 128px);
   height: clamp(72px, 12vw, 128px);
 }
+/* Only one face on screen: the open chat sheet's face takes over (Chat.tsx). */
+.hero-avatar-ring { transition: opacity 0.3s ease, transform 0.3s ease; }
+html[data-chat="open"] .hero-avatar-ring { opacity: 0; transform: scale(0.92); }
 .avatar-frame {
   position: absolute;
   inset: 0;
@@ -656,7 +660,7 @@ html {
   top: 0.5rem;
   width: 2px;
   border-radius: 1px;
-  background: linear-gradient(to bottom, var(--hue-violet), var(--accent-line));
+  background: linear-gradient(to bottom, var(--accent-2-line), var(--accent-line));
   box-shadow: 0 0 8px var(--accent-line);
   transition: height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
 }

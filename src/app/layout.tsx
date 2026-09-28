@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono, Instrument_Serif } from 'next/font/google';
+import { Schibsted_Grotesk, IBM_Plex_Mono, Newsreader } from 'next/font/google';
 import Script from 'next/script';
 import './reset.css';
 import './monospace.css';
@@ -8,25 +8,30 @@ import './stages.css';
 import './tailwind.css';
 import { Providers } from './providers';
 
-const sans = Inter({
+// Body: a grotesk with some newsprint character (narrow-ish, sturdy) rather
+// than the ubiquitous Inter.
+const sans = Schibsted_Grotesk({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-inter',
+  variable: '--font-sans-face',
   display: 'swap',
 });
 
-const mono = JetBrains_Mono({
+// Mono is reserved for small labels — kickers, dates, nav — never body copy.
+const mono = IBM_Plex_Mono({
   subsets: ['latin', 'latin-ext'],
-  variable: '--font-jetbrains-mono',
+  weight: ['400', '500'],
+  variable: '--font-mono-face',
   display: 'swap',
 });
 
-// Display serif for stage titles / hero name — weight 400 is the only weight
-// this face ships (not a variable font), so it's required here.
-const display = Instrument_Serif({
+// Display serif for the hero name, stage titles and roles. Variable, with an
+// optical-size axis, so big headings get the high-contrast display cut
+// automatically; the italic carries the hero tagline.
+const display = Newsreader({
   subsets: ['latin', 'latin-ext'],
-  weight: '400',
   style: ['normal', 'italic'],
-  variable: '--font-instrument-serif',
+  axes: ['opsz'],
+  variable: '--font-display-face',
   display: 'swap',
 });
 

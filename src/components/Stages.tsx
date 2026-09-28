@@ -15,8 +15,8 @@ import MessageForm from './MessageForm';
 
 const WORK = EXPERIENCES.filter((e) => e.kind === 'work');
 const EDUCATION = EXPERIENCES.filter((e) => e.kind === 'education');
-const EXP_HUES = ['violet', 'cyan', 'amber', 'rose'] as const;
-const PROJ_HUES = ['cyan', 'violet'] as const;
+const EXP_HUES = ['violet', 'glacier', 'amber', 'rose'] as const;
+const PROJ_HUES = ['glacier', 'wine'] as const;
 
 const Stages = () => {
   const { language } = useContext(LanguageContext);
@@ -24,7 +24,7 @@ const Stages = () => {
 
   return (
     <div className="stages">
-      <Stage id="hero" hue="lime" navLabel={t('intro')}>
+      <Stage id="hero" hue="wine" navLabel={t('intro')}>
         <Hero />
       </Stage>
 
@@ -70,7 +70,7 @@ const Stages = () => {
         id="skills"
         kicker={`${String(WORK.length + PROJECTS.length + 2).padStart(2, '0')} — ${t('skills')}`}
         title={t('skills')}
-        hue="lime"
+        hue="wine"
         navLabel={t('skills')}
       >
         <div className="ov-card glass">
@@ -82,7 +82,7 @@ const Stages = () => {
         id="recap"
         kicker={`${String(WORK.length + PROJECTS.length + 3).padStart(2, '0')} — ${t('recap')}`}
         title={t('recapTitle')}
-        hue="lime"
+        hue="wine"
         navLabel={t('recap')}
         wide
       >
