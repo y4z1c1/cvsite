@@ -112,7 +112,7 @@ export type Position = {
 export type Experience = Position & {
   id: string;
   company: string;
-  /** Filename stem looked up as /logos/{logoId}.png; falls back to a generic icon. */
+  /** Filename stem looked up as /logos/{logoId}.png; '' or a missing file falls back to a generic icon. */
   logoId: string;
   kind: 'work' | 'education';
   tech: TechId[];
@@ -205,7 +205,7 @@ export const EXPERIENCES: Experience[] = [
     company: 'Freelance',
     role: { en: 'Full-Stack Developer', tr: 'Full-Stack Geliştirici' },
     date: { en: 'Sep 2022 – May 2024', tr: 'Eyl 2022 – May 2024' },
-    logoId: 'freelance',
+    logoId: '', // no logo — renders the generic briefcase
     kind: 'work',
     tech: ['react', 'solidity', 'javascript'],
     bullets: {

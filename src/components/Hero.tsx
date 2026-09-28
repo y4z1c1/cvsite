@@ -1,11 +1,12 @@
 'use client';
 import { useContext, useRef, useState } from 'react';
-import { FaGithub, FaLinkedin, FaEnvelope, FaDownload, FaChevronDown, FaRobot, FaCheck } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaEnvelope, FaDownload, FaChevronDown, FaRobot, FaCheck, FaTimes } from 'react-icons/fa';
 import { useTranslation } from '../hooks/useTranslation';
 import { LanguageContext } from '../context/LanguageContext';
 import { CONTACT } from '../lib/persona';
 import { LINKS } from '../lib/links';
 import { buildAISummary } from '../lib/aiSummary';
+import { goTo } from '../lib/scroll';
 import AvatarTracker from './AvatarTracker';
 
 const COPIED_REVERT_MS = 2000;
@@ -30,7 +31,7 @@ const buildCVDownloadName = () => {
 const Hero = () => {
   const { t } = useTranslation();
   const { language } = useContext(LanguageContext);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const revertTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const handleCVDownload = (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -38,15 +39,17 @@ const Hero = () => {
   };
 
   const copyForAI = async () => {
+    let next: 'copied' | 'failed' = 'copied';
     try {
       await navigator.clipboard.writeText(buildAISummary(language));
-      setCopied(true);
-      clearTimeout(revertTimerRef.current);
-      revertTimerRef.current = setTimeout(() => setCopied(false), COPIED_REVERT_MS);
     } catch {
-      // clipboard permission denied or unsupported — silently no-op, nothing
-      // to recover into since there's no error state worth showing here.
+      // Clipboard denied/unsupported (insecure context, some in-app
+      // browsers). Say so rather than leaving a click that did nothing.
+      next = 'failed';
     }
+    setCopyState(next);
+    clearTimeout(revertTimerRef.current);
+    revertTimerRef.current = setTimeout(() => setCopyState('idle'), COPIED_REVERT_MS);
   };
 
   return (
@@ -78,16 +81,18 @@ const Hero = () => {
         <a className="chip glass" href={LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
           <FaLinkedin size={13} /> LinkedIn
         </a>
-        <a className="chip glass" href={LINKS.email} aria-label={t('contact')}>
+        {/* Scrolls to the on-page contact form rather than opening mailto —
+            the form is the page's one call to action. */}
+        <button type="button" className="chip glass" onClick={() => goTo('contact')}>
           <FaEnvelope size={13} /> {t('contact')}
-        </a>
-        <button type="button" className="chip glass" onClick={copyForAI} data-copied={copied}>
-          {copied ? <FaCheck size={13} /> : <FaRobot size={13} />}
-          {copied ? t('copiedForAI') : t('copyForAI')}
+        </button>
+        <button type="button" className="chip glass" onClick={copyForAI} data-copied={copyState === 'copied'}>
+          {copyState === 'copied' ? <FaCheck size={13} /> : copyState === 'failed' ? <FaTimes size={13} /> : <FaRobot size={13} />}
+          {copyState === 'copied' ? t('copiedForAI') : copyState === 'failed' ? t('copyFailed') : t('copyForAI')}
         </button>
       </div>
       <span className="hero-scroll-hint" style={{ '--i': 3 } as React.CSSProperties} aria-hidden>
-        scroll <FaChevronDown size={11} />
+        {t('scrollHint')} <FaChevronDown size={11} />
       </span>
     </div>
   );

@@ -10,10 +10,11 @@ type Props = {
 };
 
 // Tries /logos/{logoId}.png and falls back to a generic icon when the file
-// doesn't exist yet — the user will drop AI-generated logos in later, and
-// they'll be picked up with zero code changes.
+// doesn't exist yet — dropping a logo in is picked up with zero code changes.
+// An empty logoId means "no logo exists" and skips the request (and the 404
+// in the console) entirely.
 const CompanyLogo = ({ logoId, alt, kind = 'work', size = 40 }: Props) => {
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(!logoId);
   const imgRef = useRef<HTMLImageElement>(null);
 
   // onError alone isn't enough: the <img> is server-rendered, so the browser
