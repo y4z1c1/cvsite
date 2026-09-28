@@ -31,7 +31,6 @@ const display = Instrument_Serif({
 });
 
 const SITE_URL = 'https://yusufanilyazici.com';
-const OG_IMAGE = 'https://avatars.githubusercontent.com/u/56488393?v=4';
 
 const DESCRIPTION =
   'yusuf anıl yazıcı — computer engineer. full-stack, blockchain & ML experience, projects, education, skills, and an AI chat that answers as me.';
@@ -40,22 +39,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'yusuf anıl yazıcı',
   description: DESCRIPTION,
-  icons: {
-    icon: OG_IMAGE,
-  },
+  // icon.png / apple-icon.png / opengraph-image.tsx in this folder are picked
+  // up by file convention — no hotlinked GitHub avatar anymore.
+  alternates: { canonical: '/' },
   openGraph: {
     title: 'yusuf anıl yazıcı',
     description: DESCRIPTION,
     url: SITE_URL,
     siteName: 'yusuf anıl yazıcı',
-    images: [OG_IMAGE],
     type: 'profile',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'yusuf anıl yazıcı',
     description: DESCRIPTION,
-    images: [OG_IMAGE],
   },
 };
 
@@ -68,6 +65,10 @@ const PERSON_JSON_LD = {
   url: SITE_URL,
   email: 'mailto:yusufanilyazici@gmail.com',
   sameAs: ['https://github.com/y4z1c1', 'https://www.linkedin.com/in/y4z1c1/'],
+  worksFor: {
+    '@type': 'Organization',
+    name: 'Turkish Technology',
+  },
   alumniOf: {
     '@type': 'CollegeOrUniversity',
     name: 'Boğaziçi University',
