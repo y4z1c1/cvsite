@@ -23,6 +23,12 @@ html {
    stronger mandatory snap only where every stage demonstrably fits. */
 @media (min-width: 900px) and (min-height: 760px) and (prefers-reduced-motion: no-preference) {
   html { scroll-snap-type: y mandatory; }
+  /* …and back off the moment one doesn't. A tall stage drops its snap point
+     (see .stage[data-tall]), and under *mandatory* snapping the stretch above
+     the first remaining snap point becomes unreachable: with the hero taller
+     than a ~768px window, scrolling up kept yanking the page back to the
+     first job and the top of the site could not be reached. */
+  html:has(.stage[data-tall="true"]) { scroll-snap-type: y proximity; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-snap-type: none; scroll-behavior: auto; }
