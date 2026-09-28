@@ -2,6 +2,8 @@
 import { useContext } from 'react';
 import { FaBriefcase, FaGraduationCap } from 'react-icons/fa';
 import { LanguageContext } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
+import type { translations } from '../translations';
 import { useStageContext } from '../context/StageContext';
 import { EXPERIENCES } from '../lib/career';
 import { PROJECTS } from '../lib/projects';
@@ -15,23 +17,26 @@ type CareerNode = {
   kind: 'work' | 'education';
 };
 
-// Same order as Stages.tsx: all work stages, then all education stages.
-const CAREER_NODES: CareerNode[] = EXPERIENCES.map((e) => ({
-  id: e.kind === 'work' ? `exp-${e.id}` : `edu-${e.id}`,
-  company: e.company,
-  role: e.role,
-  date: e.date,
-  kind: e.kind,
-}));
-const PLAIN_STAGES = [
-  { id: 'hero', label: 'Intro' },
+// Same order as Stages.tsx: one node per work stage, then the single shared
+// education stage (labelled with the most recent school).
+const WORK = EXPERIENCES.filter((e) => e.kind === 'work');
+const LATEST_SCHOOL = EXPERIENCES.find((e) => e.kind === 'education');
+const CAREER_NODES: CareerNode[] = [
+  ...WORK.map((e) => ({ id: `exp-${e.id}`, company: e.company, role: e.role, date: e.date, kind: e.kind })),
+  ...(LATEST_SCHOOL
+    ? [{ id: 'edu', company: LATEST_SCHOOL.company, role: LATEST_SCHOOL.role, date: LATEST_SCHOOL.date, kind: 'education' as const }]
+    : []),
+];
+type Label = { text: string } | { key: keyof typeof translations.en };
+const PLAIN_STAGES: { id: string; label: Label }[] = [
+  { id: 'hero', label: { key: 'intro' } },
   // derived, not hardcoded — Stages.tsx renders one stage per PROJECTS entry,
   // so a new project would otherwise silently lose its dot and its slot in the
   // mobile progress count
-  ...PROJECTS.map((p) => ({ id: `proj-${p.id}`, label: p.name })),
-  { id: 'skills', label: 'Skills' },
-  { id: 'recap', label: 'Recap' },
-  { id: 'contact', label: 'Contact' },
+  ...PROJECTS.map((p) => ({ id: `proj-${p.id}`, label: { text: p.name } })),
+  { id: 'skills', label: { key: 'skills' } },
+  { id: 'recap', label: { key: 'recap' } },
+  { id: 'contact', label: { key: 'contact' } },
 ];
 
 // Every stage id in document order (see Stages.tsx): intro, the career
@@ -51,6 +56,8 @@ const STAGE_ORDER = [
 // fixed element competing for space.
 const StageNav = () => {
   const { language } = useContext(LanguageContext);
+  const { t } = useTranslation();
+  const labelOf = (l: Label) => ('text' in l ? l.text : t(l.key));
   const { activeId } = useStageContext();
   const careerActiveIndex = CAREER_NODES.findIndex((n) => n.id === activeId);
   const careerExpanded = careerActiveIndex >= 0;
@@ -68,18 +75,18 @@ const StageNav = () => {
     <div
       className="stage-nav-progress"
       role="progressbar"
-      aria-label="Page progress"
+      aria-label={t('pageProgress')}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(progressPct)}
     >
       <div className="stage-nav-progress-fill" style={{ width: `${progressPct}%` }} />
     </div>
-    <nav className="stage-nav glass" aria-label="Section navigation">
+    <nav className="stage-nav glass" aria-label={t('sectionNav')}>
       <button
         type="button"
         className="stage-nav-btn"
-        aria-label={PLAIN_STAGES[0].label}
+        aria-label={labelOf(PLAIN_STAGES[0].label)}
         aria-current={activeId === PLAIN_STAGES[0].id ? 'true' : undefined}
         onClick={() => goTo(PLAIN_STAGES[0].id)}
       >
@@ -116,7 +123,7 @@ const StageNav = () => {
           key={s.id}
           type="button"
           className="stage-nav-btn"
-          aria-label={s.label}
+          aria-label={labelOf(s.label)}
           aria-current={s.id === activeId ? 'true' : undefined}
           onClick={() => goTo(s.id)}
         >

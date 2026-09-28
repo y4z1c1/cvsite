@@ -7,6 +7,7 @@ import { PROJECTS } from '../lib/projects';
 import Stage from './Stage';
 import Hero from './Hero';
 import ExperienceStage from './ExperienceStage';
+import EducationStage from './EducationStage';
 import ProjectCard from './ProjectCard';
 import SkillsGrid from './SkillsGrid';
 import RecapStage from './RecapStage';
@@ -23,7 +24,7 @@ const Stages = () => {
 
   return (
     <div className="stages">
-      <Stage id="hero" hue="lime" navLabel="Intro">
+      <Stage id="hero" hue="lime" navLabel={t('intro')}>
         <Hero />
       </Stage>
 
@@ -31,7 +32,7 @@ const Stages = () => {
         <Stage
           key={exp.id}
           id={`exp-${exp.id}`}
-          kicker={`${String(i + 1).padStart(2, '0')} — ${t('experience').toUpperCase()}`}
+          kicker={`${String(i + 1).padStart(2, '0')} — ${t('experience')}`}
           hue={EXP_HUES[i % EXP_HUES.length]}
           group="career"
           navLabel={exp.company}
@@ -40,25 +41,21 @@ const Stages = () => {
         </Stage>
       ))}
 
-      {EDUCATION.map((edu, i) => (
-        <Stage
-          key={edu.id}
-          id={`edu-${edu.id}`}
-          kicker={`${String(WORK.length + i + 1).padStart(2, '0')} — ${t('education').toUpperCase()}`}
-          hue="amber"
-          group="career"
-          navLabel={edu.company}
-        >
-          <ExperienceStage experience={edu} language={language} />
-        </Stage>
-      ))}
+      <Stage
+        id="edu"
+        kicker={`${String(WORK.length + 1).padStart(2, '0')} — ${t('education')}`}
+        hue="amber"
+        group="career"
+        navLabel={t('education')}
+      >
+        <EducationStage schools={EDUCATION} language={language} />
+      </Stage>
 
       {PROJECTS.map((project, i) => (
         <Stage
           key={project.id}
           id={`proj-${project.id}`}
-          kicker={`${String(WORK.length + EDUCATION.length + i + 1).padStart(2, '0')} — ${t('projects').toUpperCase()}`}
-          title={project.name}
+          kicker={`${String(WORK.length + 2 + i).padStart(2, '0')} — ${t('projects')}`}
           hue={PROJ_HUES[i % PROJ_HUES.length]}
           group="projects"
           navLabel={project.name}
@@ -71,7 +68,7 @@ const Stages = () => {
 
       <Stage
         id="skills"
-        kicker={`${String(WORK.length + EDUCATION.length + PROJECTS.length + 1).padStart(2, '0')} — ${t('skills').toUpperCase()}`}
+        kicker={`${String(WORK.length + PROJECTS.length + 2).padStart(2, '0')} — ${t('skills')}`}
         title={t('skills')}
         hue="lime"
         navLabel={t('skills')}
@@ -83,7 +80,7 @@ const Stages = () => {
 
       <Stage
         id="recap"
-        kicker={`${String(WORK.length + EDUCATION.length + PROJECTS.length + 2).padStart(2, '0')} — ${t('recap').toUpperCase()}`}
+        kicker={`${String(WORK.length + PROJECTS.length + 3).padStart(2, '0')} — ${t('recap')}`}
         title={t('recapTitle')}
         hue="lime"
         navLabel={t('recap')}
@@ -98,7 +95,7 @@ const Stages = () => {
           so it gets a page rather than a tile in the recap grid. */}
       <Stage
         id="contact"
-        kicker={`${String(WORK.length + EDUCATION.length + PROJECTS.length + 3).padStart(2, '0')} — ${t('contact').toUpperCase()}`}
+        kicker={`${String(WORK.length + PROJECTS.length + 4).padStart(2, '0')} — ${t('contact')}`}
         title={t('messageHeading')}
         hue="violet"
         navLabel={t('contact')}

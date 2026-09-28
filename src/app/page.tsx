@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Chat from '../components/Chat';
 import Stages from '../components/Stages';
 import StageNav from '../components/StageNav';
+import SiteControls from '../components/SiteControls';
 import { StageProvider } from '../context/StageContext';
 import { useScrollVelocity } from '../hooks/useScrollVelocity';
 import { AuroraBackground } from '../components/ui/aurora-background';
@@ -19,6 +20,7 @@ const App = () => {
         <Stages />
         <StageNav />
       </StageProvider>
+      <SiteControls />
       <Chat open={chatOpen} onOpen={() => setChatOpen(true)} onClose={() => setChatOpen(false)} />
     </main>
   );

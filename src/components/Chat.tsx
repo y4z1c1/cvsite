@@ -6,6 +6,8 @@ import { useTranslation } from '../hooks/useTranslation';
 import CareerTimeline from './CareerTimeline';
 import ProjectCard from './ProjectCard';
 import MessageForm from './MessageForm';
+import ChatFace from './ChatFace';
+import type { ChatMode } from '../hooks/useChatGaze';
 import { PROJECTS } from '../lib/projects';
 import { LINKS } from '../lib/links';
 import { SKILL_GROUPS, TECH_ICONS } from '../lib/career';
@@ -81,6 +83,12 @@ const stripMarkers = (s: string) =>
 // (below) can't drift out of sync with the CSS transition it's waiting on.
 const SHEET_TRANSITION_MS = 300;
 
+// Chat-face timings: how long after the last keystroke the face still counts
+// the visitor as typing, and how long it glances at a freshly shown card.
+const TYPING_IDLE_MS = 900;
+const CARD_GLANCE_MS = 1200;
+const isCard = (l: Line) => l.kind === 'timeline' || l.kind === 'project' || l.kind === 'message';
+
 const Chat = ({ open, onOpen, onClose }: Props) => {
   const { language, setLanguage } = useContext(LanguageContext);
   const { setTheme } = useTheme();
@@ -94,6 +102,21 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
   const [streaming, setStreaming] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Drives the chat face (see useChatGaze).
+  const [typing, setTyping] = useState(false);
+  const [cardGlance, setCardGlance] = useState(false);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const glanceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => {
+    clearTimeout(typingTimerRef.current);
+    clearTimeout(glanceTimerRef.current);
+  }, []);
+  const glanceAtCard = () => {
+    setCardGlance(true);
+    clearTimeout(glanceTimerRef.current);
+    glanceTimerRef.current = setTimeout(() => setCardGlance(false), CARD_GLANCE_MS);
+  };
 
   // The panel stays mounted for the duration of its slide-down transition
   // even after `open` flips false, so the close animation can play out.
@@ -190,9 +213,13 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
   // Focus programmatically instead of `autoFocus` — this is what stops the
   // mobile keyboard from popping the moment the page loads. Only steal focus
   // when the sheet actually opens.
+  // Keyed on renderPanel too: opening swaps the dock's <input> for the
+  // sheet's one a render later, and the dock input (which had focus) unmounts
+  // with it — without refocusing the new one, keystrokes and Enter after
+  // clicking the dock went nowhere.
   useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+    if (open && renderPanel) inputRef.current?.focus();
+  }, [open, renderPanel]);
 
   // Pin the message area to the bottom. Instant (not smooth) because a tall
   // rich card can outrun a smooth animation mid-flight; the ResizeObserver
@@ -214,7 +241,10 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
     return () => ro.disconnect();
   }, []);
 
-  const print = (...ls: Line[]) => setLines((prev) => [...prev, ...ls]);
+  const print = (...ls: Line[]) => {
+    setLines((prev) => [...prev, ...ls]);
+    if (ls.some(isCard)) glanceAtCard();
+  };
 
   // returns true if handled locally as a command
   const runCommand = (raw: string): boolean => {
@@ -305,6 +335,8 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
 
     print({ kind: 'user', text: trimmed });
     setInput('');
+    clearTimeout(typingTimerRef.current);
+    setTyping(false);
 
     if (runCommand(trimmed)) return;
 
@@ -362,6 +394,7 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
               ? { kind: 'project', id: arg.slice(8) }
               : null;
         if (card) {
+          glanceAtCard();
           setLines((prev) => {
             const c = [...prev];
             // Drop the text bubble entirely if the model sent only a marker.
@@ -390,6 +423,13 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
     }
   };
 
+  const faceMode: ChatMode =
+    loading && !streaming ? 'thinking'
+      : streaming ? 'speaking'
+        : cardGlance ? 'card'
+          : typing ? 'typing'
+            : 'idle';
+
   const lastIsStreamingAssistant = (i: number) =>
     streaming && i === lines.length - 1 && lines[i].kind === 'assistant';
 
@@ -401,11 +441,17 @@ const Chat = ({ open, onOpen, onClose }: Props) => {
         send(input);
       }}
     >
+      <ChatFace mode={faceMode} inputLength={input.length} />
       <input
         ref={inputRef}
         className="term-input"
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        onChange={(e) => {
+          setInput(e.target.value);
+          setTyping(true);
+          clearTimeout(typingTimerRef.current);
+          typingTimerRef.current = setTimeout(() => setTyping(false), TYPING_IDLE_MS);
+        }}
         onFocus={() => {
           if (!open) onOpen();
         }}

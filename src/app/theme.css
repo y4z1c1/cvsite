@@ -528,7 +528,10 @@ textarea { resize: none; }
   gap: 0.6rem;
 }
 .project-link {
-  font-size: 0.78rem;
+  /* explicit, or it inherits .project-name's display serif on the stages —
+     a 12px serif URL reads as a rendering glitch */
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
   font-weight: 400;
   color: var(--accent-ink);
   text-decoration: none;
@@ -703,7 +706,9 @@ textarea { resize: none; }
   flex-wrap: wrap;
   gap: var(--space-2);
 }
-.hero-links .chip { gap: 0.4rem; }
+/* Same ink for <a> and <button> chips — links otherwise inherit the global
+   `a` colour while the buttons (Contact, Copy for AI) fall back to muted. */
+.hero-links .chip { gap: 0.4rem; color: var(--text); }
 
 .skills-groups {
   display: flex;
