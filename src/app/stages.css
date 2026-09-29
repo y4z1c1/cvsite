@@ -110,6 +110,12 @@ html {
    from a breakpoint, because whether a stage fits depends on viewport height,
    the active language, and whether the display font has loaded yet. */
 .stage[data-tall="true"] { scroll-snap-align: none; }
+/* …except the hero. It is the top of the page, so its snap point (scrollTop 0)
+   is the one the browser falls back to on load and after any relayout. Without
+   it the nearest remaining snap point is the first job, and a visitor whose
+   window is shorter than the hero landed on Turkish Technology, skipping the
+   intro. Nothing sits above it, so there is no stranded stretch to worry about. */
+.stage#hero { scroll-snap-align: start; }
 /* Touch: svh, not dvh. Mobile browsers grow and shrink dvh live as the URL bar
    hides and reappears during a scroll, so every stage re-lays-out mid-gesture
    and the content creeps under the finger. svh is the *small* viewport height,
